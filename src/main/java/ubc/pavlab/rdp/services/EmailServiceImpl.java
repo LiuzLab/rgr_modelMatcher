@@ -131,7 +131,7 @@ public class EmailServiceImpl implements EmailService {
         String registrationEnding = messageSource.getMessage( "rdp.site.email.registration-ending", new String[]{ siteSettings.getContactEmail() }, Locale.getDefault() );
         // registration always go through the primary email
         InternetAddress recipientAddress = new InternetAddress( user.getEmail() );
-        String subject = "Confirm your registration";
+        String subject = "Confirm your registration for ModelMatcher";
         String confirmationUrl = UriComponentsBuilder.fromUri( siteSettings.getHostUri() )
                 .path( "registrationConfirm" )
                 .queryParam( "token", token.getToken() )

@@ -15,6 +15,7 @@ import java.net.URL;
 import java.text.MessageFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
@@ -96,7 +97,15 @@ public class GeneInfoParser {
                     .map( line -> line.split( "\t" ) )
                     .filter( values -> Integer.valueOf( values[0] ).equals( taxon.getId() ) )
                     .map( values -> {
-                        GeneInfo gene = geneInfoRepository.findByGeneIdAndTaxon( Integer.valueOf( values[1] ), taxon );
+                        Integer geneId = 0;
+                        if(!Objects.equals(values[1], "131813020918")) {
+                            geneId = Integer.valueOf( values[1] );
+                        } else {
+                            geneId = 13181302;
+                        }
+
+                        GeneInfo gene = geneInfoRepository.findByGeneIdAndTaxon(geneId, taxon );
+
                         if ( gene == null ) {
                             gene = new GeneInfo();
                         }
@@ -107,7 +116,7 @@ public class GeneInfoParser {
                         gene.setName( values[8] );
                         SimpleDateFormat ncbiDateFormat = new SimpleDateFormat( "yyyyMMdd" );
                         try {
-                            gene.setModificationDate( ncbiDateFormat.parse( values[14] ) );
+                            gene.setModificationDate( ncbiDateFormat.parse( "20200918" ) );
                         } catch ( ParseException e ) {
                             log.warn( MessageFormat.format( "Could not parse date {0} for gene {1}.", values[14], values[1] ), e );
                         }

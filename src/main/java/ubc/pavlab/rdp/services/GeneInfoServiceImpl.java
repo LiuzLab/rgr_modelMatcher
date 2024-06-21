@@ -57,16 +57,27 @@ public class GeneInfoServiceImpl implements GeneInfoService {
 
     @Override
     public GeneInfo findBySymbolAndTaxon( String symbol, Taxon taxon ) {
+        if (taxon.getId() ==99999){
+            taxon.setId(9606);
+        }
         return geneInfoRepository.findBySymbolAndTaxon( symbol, taxon );
     }
 
     @Override
     public Collection<GeneInfo> findBySymbolInAndTaxon( Collection<String> symbols, Taxon taxon ) {
+        if (taxon.getId() ==99999){
+            taxon.setId(9606);
+        }
+
         return geneInfoRepository.findBySymbolInAndTaxon( symbols, taxon );
     }
 
     @Override
     public Collection<SearchResult<GeneInfo>> autocomplete( String query, Taxon taxon, int maxResults ) {
+        if (taxon.getId() ==99999){
+            taxon.setId(9606);
+        }
+
         Collection<SearchResult<GeneInfo>> results = new LinkedHashSet<>();
 
         if ( addAll( results, geneInfoRepository.findAllBySymbolAndTaxon( query, taxon ), GeneMatchType.EXACT_SYMBOL, maxResults ) ) {
@@ -91,19 +102,30 @@ public class GeneInfoServiceImpl implements GeneInfoService {
 
     @Override
     public void updateGenes() {
+
         ApplicationSettings.CacheSettings cacheSettings = applicationSettings.getCache();
         log.info( "Updating genes..." );
         for ( Taxon taxon : taxonService.findByActiveTrue() ) {
+            if (taxon.getId() ==99999){
+                taxon.setId(9606);
+            }
+
             try {
-                Set<GeneInfo> data;
+                Set<GeneInfo> data = Collections.emptySet();
                 if ( cacheSettings.isLoadFromDisk() ) {
                     Resource resource = cacheSettings.getGeneFilesLocation().createRelative( FilenameUtils.getName( taxon.getGeneUrl().getPath() ) );
                     log.info( MessageFormat.format( "Updating genes for {0} from {1}.", taxon, resource ) );
                     data = geneInfoParser.parse( taxon, new GZIPInputStream( resource.getInputStream() ) );
+                    log.info( MessageFormat.format( "input {0}.", taxon.getId()) );
+
                 } else {
                     log.info( MessageFormat.format( "Loading genes for {0} from {1}.",
                             taxon, taxon.getGeneUrl() ) );
-                    data = geneInfoParser.parse( taxon, taxon.getGeneUrl() );
+                    if(taxon.getId() !=6239){
+                        data = geneInfoParser.parse( taxon, taxon.getGeneUrl() );
+                        log.info( MessageFormat.format( "input {0}.", taxon.getId()) );
+
+                    }
                 }
                 log.info( MessageFormat.format( "Done parsing genes for {0}.", taxon ) );
                 geneInfoRepository.save( data );

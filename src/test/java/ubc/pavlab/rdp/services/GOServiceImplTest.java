@@ -46,7 +46,7 @@ public class GOServiceImplTest {
             ApplicationSettings.CacheSettings cacheSettings = new ApplicationSettings.CacheSettings();
             cacheSettings.setEnabled( false );
             cacheSettings.setTermFile( new ClassPathResource( "cache/go.obo" ) );
-            cacheSettings.setAnnotationFile( new ClassPathResource( "cache/gene2go.gz" ) );
+//            cacheSettings.setAnnotationFile( new ClassPathResource( "cache/gene2go.gz" ) );
             a.setCache( cacheSettings );
             return a;
         }

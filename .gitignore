@@ -3,6 +3,7 @@ out/
 /application*.properties
 !.mvn/wrapper/maven-wrapper.jar
 
+
 ### STS ###
 .apt_generated
 .classpath
@@ -15,6 +16,9 @@ out/
 .idea
 *.iws
 *.ipr
+*.jar
+*.p12
+*.out
 !.idea/codeStyles/Project.xml
 !.idea/codeStyles/codeStyleConfig.xml
 
