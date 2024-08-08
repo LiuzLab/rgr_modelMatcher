@@ -1,5 +1,4 @@
-<html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:th="http://www.thymeleaf.org"
+<html xmlns:th="http://www.thymeleaf.org"
       lang="en">
 <head th:replace="layouts/common::head(title='Admin')">
     <meta charset="UTF-8"/>
@@ -15,6 +14,8 @@
         <div class="col-3">
             <h3>User details</h3>
             <dl>
+                <dt>User ID</dt>
+                <dd th:text="${user.id}"></dd>
                 <dt>Name</dt>
                 <dd th:text="${user.profile.name}"></dd>
                 <dt>Email</dt>

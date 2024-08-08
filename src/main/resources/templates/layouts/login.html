@@ -1,11 +1,10 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:th="http://www.thymeleaf.org"
+<html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head th:fragment="login-head">
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
-    <meta name="description" th:content="${description} ?: #{rdp.site.welcome-public}"/>
+    <meta name="description" th:content="${description} ?: #{rdp.site.welcome-public(#{rdp.site.shortname})}"/>
     <title th:text="${title} ? ${title} + ' - ' + #{rdp.site.fullname} : #{rdp.site.fullname}"></title>
 
     <link rel="icon" type="image/png" sizes="16x16" th:href="@{/images/favicon-16x16.png}"/>
@@ -43,7 +42,7 @@
                     <a th:href="@{/login}">Return to login</a>
                 </div>
                 <div class="col-6 text-center">
-                    <a th:href="${'mailto:' + @siteSettings.getContactEmail()}">Contact Support</a>
+                    <a href="https://www.modelmatcher.net/Contact.html">Contact Support</a>
                 </div>
             </div>
         </div>

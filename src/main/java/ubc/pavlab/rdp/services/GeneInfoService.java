@@ -38,6 +38,8 @@ public interface GeneInfoService {
 
     Collection<GeneInfo> findBySymbolInAndTaxon( Collection<String> symbols, Taxon taxon );
 
+    Collection<GeneInfo> findBySymbolListInAndTaxon( Collection<String> symbols, Taxon taxon );
+
     Collection<SearchResult<GeneInfo>> autocomplete( String query, Taxon taxon, int maxResults );
 
     /**

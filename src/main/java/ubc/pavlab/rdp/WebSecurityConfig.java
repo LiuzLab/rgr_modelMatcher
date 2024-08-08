@@ -67,7 +67,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                     // public endpoints
                     .antMatchers( "/", "/login", "/registration", "/registrationConfirm", "/stats", "/stats.html",
                             "/forgotPassword", "/resetPassword", "/updatePassword", "/resendConfirmation", "/search/**",
-                            "/userView/**", "/taxon/**", "/access-denied" )
+                            "/userView/**", "/taxon/**", "/access-denied", "/scientistRegistry/**" )
                         .permitAll()
                     // API for international search
                     .antMatchers("/api/**")
@@ -78,6 +78,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                     // user endpoints
                     .antMatchers( "/user/**" )
                         .hasAnyRole("USER", "ADMIN")
+                    //  Match DashBoard endpoints
+                    .antMatchers( "/scientistRegistry/**" ).permitAll() // Chnage later to only permit from //   .hasAnyRole("MATCH_DASHBOARD")
                     .and()
                 // TODO: we should fully comply with CSRF
                 .csrf()

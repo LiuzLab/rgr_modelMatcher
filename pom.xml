@@ -5,7 +5,7 @@
 
     <groupId>ubc.pavlab</groupId>
     <artifactId>rdp</artifactId>
-    <version>1.4.0-SNAPSHOT</version>
+    <version>1.5.0-SNAPSHOT-MOMAT</version>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
@@ -55,13 +55,32 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
-            <optional>true</optional>
+<!--            <optional>true</optional>-->
         </dependency>
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-actuator-docs</artifactId>
-            <optional>true</optional>
+<!--            <optional>true</optional>-->
+        </dependency>
+
+        <!-- Micrometer Registry for AWS CloudWatch -->
+<!--        <dependency>-->
+<!--            <groupId>io.micrometer</groupId>-->
+<!--            <artifactId>micrometer-registry-cloudwatch2</artifactId>-->
+<!--            <version>1.5.16</version>-->
+<!--        </dependency>-->
+
+<!--        <dependency>-->
+<!--            <groupId>io.micrometer</groupId>-->
+<!--            <artifactId>micrometer-core</artifactId>-->
+<!--            <version>1.1.9</version> &lt;!&ndash; Check for the latest compatible version &ndash;&gt;-->
+<!--        </dependency>-->
+
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-cloudwatch2</artifactId>
+            <version>1.9.4</version>
         </dependency>
 
         <!-- JPA Data (We are going to use Repositories, Entities, Hibernate, etc...) -->
@@ -83,6 +102,7 @@
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
+            <version>8.0.19</version>
         </dependency>
 
         <!-- Thymeleaf security dialect -->
@@ -101,7 +121,6 @@
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-core</artifactId>
-            <version>3.2.1</version>
         </dependency>
 
         <!-- Development Time Resources -->
@@ -117,8 +136,6 @@
             <artifactId>lombok</artifactId>
         </dependency>
 
-        <!-- Utilities -->
-
         <dependency>
             <groupId>commons-net</groupId>
             <artifactId>commons-net</artifactId>
@@ -128,8 +145,16 @@
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-            <version>2.8.0</version>
+            <version>2.11.0</version>
         </dependency>
+
+<!--        &lt;!&ndash; Utilities &ndash;&gt;-->
+
+<!--        <dependency>-->
+<!--            <groupId>commons-io</groupId>-->
+<!--            <artifactId>commons-io</artifactId>-->
+<!--            <version>2.11.0</version>-->
+<!--        </dependency>-->
 
         <!-- Testing Support -->
 
@@ -169,19 +194,32 @@
 
     <properties>
         <java.version>1.8</java.version>
-        <tomcat.version>8.5.41</tomcat.version>
+        <mysql.version>8.0.28</mysql.version>
+        <spring.version>4.3.30.RELEASE</spring.version>
+        <!-- This specific version is hardened against JNDI-based attacks -->
+        <logback.version>1.2.9</logback.version>
+        <tomcat.version>8.5.75</tomcat.version>
     </properties>
 
     <build>
+        <finalName>ModelMatcher</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>build-info</id>
+                        <goals>
+                            <goal>build-info</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>com.amashchenko.maven.plugin</groupId>
                 <artifactId>gitflow-maven-plugin</artifactId>
-                <version>1.9.0</version>
+                <version>1.15.1</version>
                 <configuration>
                     <!-- Do not push to remote -->
                     <pushRemote>false</pushRemote>
@@ -196,13 +234,14 @@
                         <featureBranchPrefix>feature-</featureBranchPrefix>
                         <hotfixBranchPrefix>hotfix-</hotfixBranchPrefix>
                         <supportBranchPrefix>support-</supportBranchPrefix>
+                        <versionTagPrefix>v</versionTagPrefix>
                     </gitFlowConfig>
                 </configuration>
             </plugin>
             <plugin>
                 <groupId>org.flywaydb</groupId>
                 <artifactId>flyway-maven-plugin</artifactId>
-                <version>3.2.1</version>
+                <version>${flyway.version}</version>
             </plugin>
         </plugins>
     </build>

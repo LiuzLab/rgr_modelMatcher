@@ -238,6 +238,8 @@ public class UserController {
         Set<String> organUberonIds;
     }
 
+
+//    TODO: MOVE TO MATCH DASHBOARD CONTROLLER
     @ResponseBody
     @PostMapping(value = "/user/profile", produces = MediaType.TEXT_PLAIN_VALUE)
     public String saveProfile( @RequestBody ProfileWithOrganUberonIds profileWithOrganUberonIds ) {
@@ -353,4 +355,5 @@ public class UserController {
         }
         return userService.recommendTerms( userService.findCurrentUser(), taxon );
     }
+
 }

@@ -9,7 +9,6 @@
     <thead class="thead-light">
     <tr>
         <th scope="col"></th>
-        <th th:if="${remote}" scope="col">Origin</th>
         <th scope="col">Full Name</th>
         <th scope="col">
             <span th:unless="${@applicationSettings.profile.enabledResearcherPositions.isEmpty()}">Position and</span>
@@ -20,13 +19,13 @@
     <tbody>
     <tr th:each="u : ${users}">
         <td class="text-center" style="width: 10em;">
-            <a th:if="${remote}"
+            <a style="background-color:teal" th:if="${remote}"
                th:href="@{/userView/{userId}(userId=${u.id},remoteHost=${u.originUrl})}"
                class="btn btn-primary btn-sm">
                 <i class="oi oi-person"></i>
                 View User Profile
             </a>
-            <a th:if="not ${remote}"
+            <a style="background-color:teal" th:if="not ${remote}"
                th:href="@{/userView/{userId}(userId=${u.id})}"
                th:attr="data-user-id=${u.id}"
                class="btn btn-primary btn-sm btn-block user-preview-popover">
@@ -34,7 +33,6 @@
                 View User Profile
             </a>
         </td>
-        <td th:if="${remote}" th:text="${u.origin}"></td>
         <td th:text="${u.profile.fullName}"></td>
         <td>
             <span th:if="${u.profile.researcherPosition}"
@@ -61,12 +59,12 @@
     <thead class="thead-light">
     <tr>
         <th scope="col"></th>
-        <th th:if="${remote}" scope="col">Origin</th>
         <th scope="col">Full Name</th>
-        <th scope="col">
-            <span th:unless="${@applicationSettings.profile.enabledResearcherPositions.isEmpty()}">Position and</span>
-            Organization
-        </th>
+        <th th:if="not ${remote}" scope="col">PI</th>
+	<th th:if="${remote}" scope="col">Network</th>
+
+        <th scope="col">Organization</th>
+
         <th scope="col">Gene</th>
         <th scope="col"
             data-toggle="tooltip"
@@ -77,40 +75,51 @@
     </tr>
     </thead>
     <tbody>
-    <tr th:each="ug : ${usergenes}">
+    <tr th:each="ug : ${usergenes}" th:unless="${ug.anonymousId} and ${remote}">
         <td class="text-center" style="width: 10em;">
-            <a th:if="${ug.anonymousId} == null and ${remote}"
-               th:href="@{/userView/{userId}(userId=${ug.user.id},remoteHost=${ug.user.originUrl})}"
-               class="btn btn-primary btn-sm btn-block">
+            <a style="background-color:teal" th:if="${ug.anonymousId} == null and ${remote}"
+               th:href="@{{remoteHost}/userView/{userId}(remoteHost=${ug.user.originUrl},userId=${ug.user.id})}" target="_blank"
+               class="btn btn-primary btn-sm btn-block" >
                 <i class="oi oi-person"></i>
                 View User Profile
             </a>
-            <a th:if="${ug.anonymousId} == null and not ${remote}"
-               th:href="@{/userView/{userId}(userId=${ug.user.id})}"
+            <a style="background-color:teal" th:if="${ug.anonymousId} == null and not ${remote}"
+               th:href="@{/userView/{userId}(userId=${ug.user.id})}" target="_blank"
                th:attr="data-user-id=${ug.user.id}"
                class="btn btn-primary btn-sm btn-block user-preview-popover">
                 <i class="oi oi-person"></i>
                 View User Profile
             </a>
-            <a th:if="${ug.anonymousId}"
-               th:href="@{/search/gene/by-anonymous-id/{anonymousId}/request-access(anonymousId=${ug.anonymousId})}"
-               th:attr="data-anonymous-user-id=${ug.user.anonymousId}"
-               class="btn btn-primary btn-sm btn-block user-preview-popover">
+
+            <a style="background-color:gray" th:if="${ug.anonymousId}" href="https://www.modelmatcher.net/Tutorials.html#collapse24_41" target="_blank"
+               class="btn btn-primary btn-sm btn-block">
                 <i class="oi oi-lock-locked"></i>
-                Request Access
+                Restricted Gene
             </a>
+
         </td>
-        <td th:if="${remote}" th:text="${ug.user.origin}"></td>
-        <td th:text="${ug.user.profile.fullName}"></td>
         <td>
+<span th:if="${ug.anonymousId}">Anonymous Scientist</span>
+<span th:unless="${ug.anonymousId}" th:text="${ug.user.profile.fullName}"></span>
+
+</td>
+
+	<td th:if="not ${remote}">
             <span th:if="${ug.user.profile.researcherPosition}"
-                  th:text="#{'ResearcherPosition.' + ${ug.user.profile.researcherPosition}}">...</span>
-            <span th:if="${ug.user.profile.researcherPosition} != null and ${ug.user.profile.organization} != ''">at</span>
-            <span th:text="${ug.user.profile.organization}"></span>
-        </td>
+                  th:text="Yes">...</span>
+            <span th:unless="${ug.user.profile.researcherPosition}"
+                  th:text="${ug.anonymousId}?'?':'No'">...</span>
+	</td>
+        <td th:if="${remote}" th:text="${ug.user.origin}"></td>
+
+        <td th:text="${ug.user.profile.organization}"></td>
         <td th:text="${ug.symbol}"></td>
-        <td th:text="${ug.tier}"></td>
-        <td th:text="${#strings.capitalizeWords(ug.taxon.commonName)}"></td>
+        <td th:text="${ug.tier==T(ubc.pavlab.rdp.model.enums.TierType).TIER1}?'Primary':'Secondary'"></td>
+        <td>
+            <span th:if="${ug.taxon.commonName=='e. coli'}"><i>E. coli</i></span>
+            <span th:unless="${ug.taxon.commonName=='e. coli'}" th:text="${#strings.capitalizeWords(ug.taxon.commonName)}">...</span>
+
+	</td>
     </tr>
     <tr th:if="${#lists.isEmpty(usergenes)}" class="table-warning">
         <td class="text-center warning" th:colspan="100">No user genes found matching the provided search criteria.</td>

@@ -1,0 +1,26 @@
+--- META-INF/MANIFEST.MF	2024-06-26 16:29:28.000000000 +0000
++++ META-INF/MANIFEST.MF	2022-02-21 19:58:30.000000000 +0000
+@@ -1,16 +1,16 @@
+ Manifest-Version: 1.0
+-Archiver-Version: Plexus Archiver
+-Created-By: Apache Maven 3.6.3
+-Built-By: zahid
+-Build-Jdk: 11.0.23
+ Implementation-Title: rdp
+-Implementation-Version: 1.4.0-SNAPSHOT
++Implementation-Version: 1.5.0-SNAPSHOT
++Archiver-Version: Plexus Archiver
++Built-By: ubuntu
+ Implementation-Vendor-Id: ubc.pavlab
++Spring-Boot-Version: 1.5.22.RELEASE
+ Implementation-Vendor: Pivotal Software, Inc.
+-Implementation-URL: https://projects.spring.io/spring-boot/rdp/
+ Main-Class: org.springframework.boot.loader.JarLauncher
+ Start-Class: ubc.pavlab.rdp.Application
+-Spring-Boot-Version: 1.5.22.RELEASE
+ Spring-Boot-Classes: BOOT-INF/classes/
+ Spring-Boot-Lib: BOOT-INF/lib/
++Created-By: Apache Maven 3.6.3
++Build-Jdk: 1.8.0_275
++Implementation-URL: https://projects.spring.io/spring-boot/rdp/
+ 

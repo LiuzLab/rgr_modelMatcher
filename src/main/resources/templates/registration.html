@@ -1,6 +1,5 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:th="http://www.thymeleaf.org"
+<html xmlns:th="http://www.thymeleaf.org"
       lang="en">
 
 <head th:replace="layouts/login::head(title='Registration')">
@@ -12,7 +11,7 @@
 <div class="wrapper d-flex justify-content-center align-items-center">
     <div class="container py-4">
         <h4 class="form-signin-heading"><a th:href="@{/login}" th:text="#{rdp.site.fullname}"></a></h4>
-        <h6 class="form-signin-subheading">Researcher Registry</h6>
+        <h6 class="form-signin-subheading">Scientist Registry</h6>
         <div th:replace="layouts/login::message"></div>
         <form th:action="@{/registration}" th:object="${user}" method="POST">
             <div class="form-row">
@@ -50,7 +49,7 @@
 
             <div class="form-group row">
                 <div class="offset-md-1 col-md-4">
-                    <button class="btn btn-primary btn-block"
+                    <button style="background-color:teal" class="btn btn-primary btn-block"
                             name="Submit"
                             value="Register User"
                             type="Submit"

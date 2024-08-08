@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml"
-	  xmlns:th="http://www.thymeleaf.org"
+<html xmlns:th="http://www.thymeleaf.org"
 	  lang="en">
   <head>
+    <meta charset="UTF-8"/>
+    <title>404 Not Found</title>
     <link rel="icon" type="image/png" sizes="16x16" th:href="@{/images/favicon-16x16.png}"/>
     <link rel="icon" type="image/png" sizes="32x32" th:href="@{/images/favicon-32x32.png}"/>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
@@ -361,23 +362,22 @@
 
   </head>
   <body class="sign error-page-wrapper background-color background-image">
-    <div class="sign-container">
+   <div class="sign-container">
 	<div class="nob"></div>
 	<div class="post left"></div>
 	<div class="post right"></div>
 	<div class="pane">
 		<div class="headline sign-text-color">
-			404
+			Your account has successfully been activated: 
 		</div>
 		<div class="context sign-text-color">
-			Oops, the page you're<br/>
-			looking for does not exist.
+			<a href="https://www.modelmatcher.net:8443/login">Log in here</a>
 		</div>
 	</div>
 </div>
 <div class="text-container">
 	<div class="headline secondary-text-color">
-		404
+		If you did not access this site through a registration link; something has gone wrong: 
 	</div>
 	<div class="context primary-text-color">
 		<p>

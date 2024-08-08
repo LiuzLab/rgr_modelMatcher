@@ -43,4 +43,8 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     @QueryHints(@QueryHint(name = "org.hibernate.cacheable", value = "true"))
     Collection<User> findByProfileDescriptionContainingIgnoreCaseOrTaxonDescriptionsContainingIgnoreCase(
             String descriptionLike, String taxonDescriptionLike );
+
+
+//    @Query("select user, from User user left join fetch user.roles where lower(user.email) = lower(:email)")
+//    User findByEmailIgnoreCaseChangeFieldNames( @Param("email") String email );
 }

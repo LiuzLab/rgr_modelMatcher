@@ -5,13 +5,68 @@
 <body>
 <!-- Orthologs mapped -->
 <div th:fragment="ortholog-table (orthologs)">
+<span>Additional info on human </span>
+    <a target="_blank" th:href="@{https://www.ncbi.nlm.nih.gov/gene/{geneId}(geneId=${gene.geneId})}">
+        <span th:text="${gene.symbol}"></span>
+    </a><span> and its homologs:</span>
+<br>
+</br>
+
+<div class="row">
+    <div class="col-3 col-md-3 col-lg-3"
+         data-toggle="tooltip"
+         title="Marrvel">
+        <a target="_blank" th:href="@{http://marrvel.org/human/gene/{geneId}(geneId=${gene.geneId})}"><img style="vertical-align: middle; opacity:0.7; height:2.5rem" th:src="@{/images/marrvel2.jpg}"
+             class="img-fluid"/></a>
+    </div>
+    <div class="col-2 col-md-2 col-lg-2">
+
+            <a style="vertical-align: middle; background-color:teal" 
+               th:href="@{https://www.modelmatcher.net/redirect/{geneId}(geneId=${gene.geneId})}" target="_blank"
+               
+               class="btn btn-primary btn-sm btn-block user-preview-popover">
+                <i class="oi oi-external-link"></i>
+                AGR
+            </a>
+    </div>
+
+    <div class="col-2 col-md-2 col-lg-2">
+
+<!--            <a style="vertical-align: middle; background-color:teal" th:href="@{https://www.gene2function.org/search/get_ortholog/9606/{geneId}/best_match(geneId=${gene.geneId})}" target="_blank"-->
+        <a style="vertical-align: middle; background-color:teal" th:href="@{https://www.gene2function.org/search/web/get_ortholog/9606/{geneId}/best_match(geneId=${gene.geneId})}" target="_blank"
+               class="btn btn-primary btn-sm btn-block">
+                <i class="oi oi-external-link"></i>
+                G2F
+            </a>
+    </div>
+
+    <div class="col-2 col-md-2 col-lg-2">
+
+            <a style="vertical-align: middle; background-color:teal"
+               th:href="@{https://monarchinitiative.org/gene/NCBIGene:{geneId}(geneId=${gene.geneId})}" target="_blank"
+             
+               class="btn btn-primary btn-sm btn-block user-preview-popover">
+                <i class="oi oi-external-link"></i>
+                Monarch
+            </a>
+
+    </div>
+
+</div>
+<br>
+</br>
+
     <th:block th:each="entry, iterOrtholog : ${orthologs}">
         <span th:if="${iterOrtholog.first}">
-          Showing the results for the specified human gene and the following orthologs:
+          Showing the results for the specified human gene and the following ortholog candidates:
         </span>
         <em th:text="${entry.key.scientificName}"></em>
-        <th:block th:each="orthologGene, iterGene : ${entry.value}"><th:block th:if="${iterGene.first}">(</th:block><a th:href="@{https://www.ncbi.nlm.nih.gov/gene/{geneId}(geneId=${orthologGene.geneId})}" th:text="${orthologGene.symbol}" target="_blank" rel="noopener"></a><th:block th:if="${!iterGene.last}">,</th:block><th:block th:if="${iterGene.last}">)</th:block></th:block><span th:text="${iterOrtholog.last} ? '.' : ','"></span>
+        <th:block th:each="orthologGene, iterGene : ${entry.value}"><th:block th:if="${iterGene.first}">(</th:block>
+            <a th:href="@{https://www.ncbi.nlm.nih.gov/gene/{geneId}(geneId=${orthologGene.geneId})}" th:text="${orthologGene.symbol}" target="_blank" rel="noopener"></a>
+            <th:block th:if="${!iterGene.last}">,</th:block><th:block th:if="${iterGene.last}">)</th:block></th:block><span th:text="${iterOrtholog.last} ? '.' : ','"></span>
     </th:block>
+<span> from the ModelMatcher registry. Displaying results from our partner registries (RDMM, Solve-RD, AFGN) as well, which may use slightly different ortholog prediction algorithms.</span>
+
 </div>
 </body>
 </html>

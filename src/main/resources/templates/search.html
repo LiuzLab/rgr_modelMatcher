@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <!--suppress HtmlUnknownTarget css and js folders not recognised after build-->
-<html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:th="http://www.thymeleaf.org"
+<html xmlns:th="http://www.thymeleaf.org"
       lang="en">
 
 <head th:replace="layouts/common::head(title='Search')">
@@ -14,17 +13,15 @@
 <div th:replace="layouts/common::header">...</div>
 
 <div class="container py-4">
-    <div th:replace="layouts/common::title(title='Search', subtitle='Researchers, Organs Systems &amp; Genes')">
+    <div th:replace="layouts/common::title(title='Search : BETA', subtitle='Genes, Models &amp; Organs Systems')">
         ...
     </div>
-
-    <p class="lead mb-3" th:text="#{rdp.site.welcome-public}">...</p>
 
     <ul class="nav nav-tabs mt-3">
         <li class="nav-item"><a class="nav-link active" id="gene-tab" data-toggle="tab"
                                 href="#gene-search">Genes</a></li>
         <li class="nav-item"><a class="nav-link" id="res-tab" data-toggle="tab"
-                                href="#user-search">Researchers</a></li>
+                                href="#user-search">Terms</a></li>
     </ul>
 
     <div class="tab-content border-left border-right border-bottom p-3 mb-3">
@@ -34,18 +31,17 @@
             <form class="search">
                 <div class="form-row">
                     <div class="col-md-9">
-                        <label for="symbolInput">Search for researchers that study the following organism-specific
-                            gene:</label>
+                        <label for="symbolInput">Search for researchers that study the following gene or ortholog candidates:</label>
                     </div>
                     <div class="col-md-3" th:if="${@applicationSettings.enabledTiers.size()} > 1">
-                        <label for="tiers">Within the following tiers:</label>
+                        <label for="tiers">Narrow your search by tier (optional):</label>
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group col-md-5">
                         <div class="input-group">
                             <div class="input-group-prepend">
-                                <button class="btn btn-outline-secondary pull-right" type="submit"
+                                <button style="background-color:teal" class="btn btn-primary" type="submit"
                                         id="gene-search-btn"
                                         title="Look for researchers that focus on the specified gene.">
                                     <i class="oi oi-magnifying-glass"></i>
@@ -62,10 +58,15 @@
                         <select id="taxonId" name="taxonId" class="custom-select"
                                 title="Taxon to run primary search on">
                             <th:block th:each="taxon : ${@taxonService.findByActiveTrue()}">
-                                <option th:value="${taxon.id}"
-                                        th:text="${#strings.capitalizeWords(taxon.commonName)}"
-                                        th:selected="${taxon.id} == ${taxonId ?: 9606}"></option>
-                            </th:block>
+	                                <option th:if="${taxon.id==9606}" th:value="${taxon.id}"	
+                                        th:text="Human"	
+                                        th:selected="${taxon.id} == ${taxonId ?: 9606}"></option>	
+                                <option th:if="${taxon.id==511145}" th:value="${taxon.id}"	
+                                        	
+                                        ><i>E. coli</i></option>	
+                                <option th:if="${taxon.id!=9606 and taxon.id!=511145}" th:value="${taxon.id}"	
+                                        th:text="${#strings.capitalizeWords(taxon.commonName)}"	
+                                        th:selected="${taxon.id} == ${taxonId ?: 9606}"></option>                            </th:block>
                         </select>
                     </div>
                     <div class="form-group col-md-3"
@@ -95,18 +96,23 @@
                                 class="form-control custom-select ortholog-select"
                                 id="ortholog-select"
                                 title="Taxon to run primary search on">
-                            <option th:value="null">All</option>
-                            <option th:each="taxon : ${@taxonService.findByActiveTrue()}"
-                                    th:value="${taxon.id}"
-                                    th:text="${#strings.capitalizeWords(taxon.commonName)}"
-                                    th:selected="${taxon.id} == ${orthologTaxonId ?: 9606}"></option>
-                        </select>
+                            <option th:value="null" th:selected="${orthologTaxonId} == null">All</option>
+<th:block th:each="taxon : ${@taxonService.findByActiveTrue()}">	
+                                <option th:if="${taxon.id==9606}" th:value="${taxon.id}"	
+                                        th:text="Human"	
+                                        ></option>	
+                                <option th:if="${taxon.id==511145}" th:value="${taxon.id}"	
+                                        	
+                                        ><i>E. coli</i></option>	
+                                <option th:if="${taxon.id!=9606 and taxon.id!=511145}" th:value="${taxon.id}"	
+                                        th:text="${#strings.capitalizeWords(taxon.commonName)}"	
+                                        ></option>                            </th:block>	                        </select>
                     </div>
                     <div class="form-group col-md-3">
                         <label class="col-form-label" for="ortholog-select">
                             <i class="tip oi oi-question-mark"
                                data-toggle="tooltip"
-                               title="When a human gene is entered, you can search for researchers studying that gene's ortholog(s) in one or all of the supported model organisms">
+                               title="When a human gene is entered, you can search for researchers studying that gene's ortholog candidate(s) in one or all of the supported model organisms">
                             </i>
                         </label>
                     </div>
@@ -127,7 +133,7 @@
                 -->
                 <div th:if="${@applicationSettings.organs.enabled}" class="form-row">
                     <div class="col-md-12">
-                        <p>With relevance to the following human organ systems (or any if none are selected):</p>
+                        <p>Narrow your search by organ system (optional):</p>
                     </div>
                     <div class="col-md-12">
                         <div th:replace="fragments/organ::organs-selection(checkedOrganUberonIds = ${organUberonIds})">
@@ -141,53 +147,8 @@
         </div>
 
         <div id="user-search" role="tabpanel" aria-labelledby="res-tab" class="tab-pane fade">
-            <!--Researchers alphabetically-->
-            <div th:unless="${chars.isEmpty()}" class="form-row d-none d-lg-block">
-                <div class="col-md-12">
-                    <label>Browse alphabetically:</label>
-                    <div class="btn-toolbar">
-                        <div class="btn-group" id="alpha-grp" role="group"
-                             title="Look for users whose name or last name starts with this letter.">
-                            <ul class="pagination">
-                                <li th:each="char : ${chars}"
-                                    class="page-item">
-                                    <form class="search">
-                                        <input type="hidden" name="iSearch" th:value="${iSearch}"/>
-                                        <input type="hidden" name="prefix" value="true"/>
-                                        <input type="hidden" name="nameLike" th:value="${char}"/>
-                                        <button class="page-link" type="submit"
-                                                name="nameLikeBtn"
-                                                th:text="${char}"></button>
-                                    </form>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!--Researchers by name-->
-            <form class="search">
-                <div class="form-row">
-                    <div class="form-group col-md-12">
-                        <label for="nameLike">Search by name:</label>
-                        <div class="input-group">
-                            <div class="input-group-prepend">
-                                <button class="btn btn-outline-secondary" type="submit"
-                                        title="Look for researchers whose name or last name contains this string.">
-                                    <i class="oi oi-magnifying-glass"></i>
-                                    Search
-                                </button>
-                            </div>
-                            <input type="text" class="form-control" name="nameLike" id="nameLike"
-                                   placeholder="Part of researcher name" th:value="${nameLike}"/>
-                            <input type="hidden" name="iSearch" th:value="${iSearch}"/>
-                            <input type="hidden" name="prefix" value="false"/>
-                        </div>
-                    </div>
-                </div>
-            </form>
-
+            
+          
             <!--Researchers by description-->
             <form class="search">
                 <div class="form-row">
@@ -195,7 +156,7 @@
                         <label for="descriptionLike">Search by research interests:</label>
                         <div class="input-group">
                             <div class="input-group-prepend">
-                                <button class="btn btn-outline-secondary" type="submit"
+                                <button style="background-color:teal" class="btn btn-outline-secondary" type="submit"
                                         title="Look for researches whose description contains these keywords.">
                                     <i class="oi oi-magnifying-glass"></i>
                                     Search
@@ -248,7 +209,7 @@
         </div>
     </div>
 
-    <form th:if="${@applicationSettings.getIsearch().isEnabled()}"
+    <form style="display:none" th:if="${@applicationSettings.getIsearch().isEnabled()}"
           class="mb-3">
         <div class="form-row">
             <div class="col-md-12">
@@ -270,16 +231,44 @@
 
     <hr/>
 
+<!--    &lt;!&ndash;Ortholog Table Fragment &ndash;&gt;-->
+<!--    <div th:if="${gene != null}">-->
+<!--        <p th:text="'Gene ID: ' + ${gene.geneId}"></p>-->
+<!--        &lt;!&ndash; other code &ndash;&gt;-->
+<!--    </div>-->
+<!--    <div th:if="${gene == null}">-->
+<!--        <p>Gene information is not available.</p>-->
+<!--    </div>-->
+
+<!--    &lt;!&ndash;Ortholog Table Fragment &ndash;&gt;-->
+<!--    <div th:if="${userGene != null}">-->
+<!--        <p th:text="'user Gene: ' + ${userGene}"></p>-->
+<!--        &lt;!&ndash; other code &ndash;&gt;-->
+<!--    </div>-->
+<!--    <div th:if="${userGene == null}">-->
+<!--        <p>userGene information is not available.</p>-->
+<!--    </div>-->
+
+<!--    &lt;!&ndash;Ortholog Table Fragment &ndash;&gt;-->
+<!--    <div th:if="${orthologs != null}">-->
+<!--        <p th:text="' orthologs : ' + ${orthologs}"></p>-->
+<!--        &lt;!&ndash; other code &ndash;&gt;-->
+<!--    </div>-->
+<!--    <div th:if="${orthologs == null}">-->
+<!--        <p>Orthologs information is not available.</p>-->
+<!--    </div>-->
+
     <!--Orthologs -->
     <div id="orthologsResults" class="mb-3">
         <div th:if="${orthologs != null} "
-             th:replace="fragments/user-table::ortholog-table(users=${users}, orthologs=${orthologs}, remote=false)">
+             th:replace="fragments/user-table::ortholog-table(users=${users}, orthologs=${orthologs},gene=${gene}, symbol=${symbol},remote=false)">
             ...
         </div>
     </div>
 
     <!--Results-->
     <div class="mb-3">
+<!--    <div class="mb-3" th:if="${(users != null) or (usergenes != null)} ">-->
         <h4 th:text="'Researchers registered in ' + #{rdp.site.shortname}"></h4>
         <div id="userTable">
             <div th:replace="layouts/common::message"></div>
@@ -297,6 +286,7 @@
     </div>
 
     <!--International results-->
+<!--    <div th:if="${@applicationSettings.getIsearch().isEnabled()  and ${(itlUsers != null) or (itlUsergenes != null)}"-->
     <div th:if="${@applicationSettings.getIsearch().isEnabled()}"
          id="itlResults"
          class="mb-3">

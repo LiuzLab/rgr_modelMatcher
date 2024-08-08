@@ -39,6 +39,8 @@ public interface UserService {
 
     User findUserByAnonymousId( UUID anonymousId );
 
+    UserGene findUserGeneByAnonymousIdNoAuth( UUID anonymousId );
+
     UserGene findUserGeneByAnonymousId( UUID anonymousId );
 
     User findUserByIdNoAuth( int id );
@@ -59,11 +61,11 @@ public interface UserService {
 
     Collection<User> findAll();
 
-    Collection<User> findByLikeName( String nameLike, Set<ResearcherPosition> researcherPositions, Set<ResearcherCategory> researcherTypes, Collection<UserOrgan> userOrgans );
+    Collection<User> findByLikeName( String nameLike, Set<ResearcherPosition> researcherPositions, Set<ResearcherCategory> researcherTypes, Collection<OrganInfo> userOrgans );
 
-    Collection<User> findByStartsName( String startsName, Set<ResearcherPosition> researcherPositions, Set<ResearcherCategory> researcherTypes, Collection<UserOrgan> userOrgans );
+    Collection<User> findByStartsName( String startsName, Set<ResearcherPosition> researcherPositions, Set<ResearcherCategory> researcherTypes, Collection<OrganInfo> userOrgans );
 
-    Collection<User> findByDescription( String descriptionLike, Set<ResearcherPosition> researcherPositions, Collection<ResearcherCategory> researcherTypes, Collection<UserOrgan> userOrgans );
+    Collection<User> findByDescription( String descriptionLike, Set<ResearcherPosition> researcherPositions, Collection<ResearcherCategory> researcherTypes, Collection<OrganInfo> userOrgans );
 
     long countResearchers();
 
@@ -101,4 +103,6 @@ public interface UserService {
     long computeTermOverlaps( UserTerm userTerm, Collection<GeneInfo> genes );
 
     long computeTermFrequency( User user, GeneOntologyTerm term );
+
+    void sendGeneAccessRequest(User requestingUser, UserGene userGene, String reason);
 }

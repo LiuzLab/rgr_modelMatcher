@@ -1,14 +1,13 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:th="http://www.thymeleaf.org"
+<html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head th:fragment="head">
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
-    <meta name="description" th:content="${description} ?: #{rdp.site.welcome-public}"/>
+    <meta name="description" th:content="${description} ?: #{rdp.site.welcome-public(#{rdp.site.shortname})}"/>
     <title th:text="${title} ? ${title} + ' - ' + #{rdp.site.fullname} : #{rdp.site.fullname}"></title>
-    <link rel="icon" type="image/png" sizes="16x16" th:href="@{/images/favicon-16x16.png}"/>
-    <link rel="icon" type="image/png" sizes="32x32" th:href="@{/images/favicon-32x32.png}"/>
+    <link rel="icon" type="image/png" sizes="16x16" th:href="@{/images/mm.png}"/>
+    <link rel="icon" type="image/png" sizes="32x32" th:href="@{/images/mm.png}"/>
 
     <!-- Latest compiled and minified CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
@@ -27,16 +26,13 @@
           crossorigin="anonymous"
           href="https://cdn.datatables.net/1.10.22/css/dataTables.bootstrap4.min.css"/>
     <link rel="stylesheet" th:href="@{/css/common.css}"/>
-    <link rel="stylesheet" th:href="@{/css/model.css}"/>
-    <link rel="stylesheet" th:href="@{/css/search.css}"/>
 </head>
 <body>
-<nav th:fragment="header" th:style="'background-image:url(\'' + @{/images/header.jpg} + '\'); background-size: cover;'"
+<nav th:fragment="header" th:style="'background-image:url(\'' + @{/images/header-final.jpg} + '\'); background-size: cover;'"
      class="navbar navbar-expand-lg navbar-dark bg-primary">
     <div class="container">
-        <a class="navbar-brand" th:href="@{/user/home}" href="/">
-            <div th:utext="#{rdp.site.logohtml}" th:remove="tag"/>
-        </a>
+        <a class="navbar-brand" href="https://www.modelmatcher.net/">	
+            <img th:src="@{/images/banner.png}" title="" style="height: 3rem;"/>        </a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
                 aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
@@ -45,71 +41,74 @@
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul sec:authorize="isAuthenticated()"
                 class="navbar-nav mr-auto">
-                <li class="nav-item">
-                    <a class="nav-link" th:href="@{/user/home}" href="/">Home</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" th:href="@{/user/profile}" href="/user/profile">Profile</a>
-                </li>
-                <li class="nav-item dropdown">
-                    <!--suppress HtmlUnknownTarget -->
-                    <a class="nav-link dropdown-toggle" href="/user/model" id="navbarDropdownModel" role="button"
-                       data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Model Organisms</a>
-                    <div class="dropdown-menu" aria-labelledby="navbarDropdownModel">
-                        <a th:each="taxon : ${@taxonService.findByActiveTrue()}"
-                           class="dropdown-item text-capitalize"
-                           th:href="@{/user/model/{taxonId}(taxonId=${taxon.id})}"
-                           th:text="${taxon.commonName}"
-                           th:classappend="${@userService.findCurrentUser()?.hasTaxon(taxon)} ? 'hastaxon' : ''"></a>
-                    </div>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" th:href="@{/user/documentation}" href="/user/documentation">Documentation</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" th:href="@{/user/faq}" href="/user/faq">FAQ</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" th:href="@{/user/support}" href="/user/support">Contact</a>
-                </li>
-                <li sec:authorize="hasPermission(null, 'search')"
-                    class="nav-item">
-                    <a class="nav-link" th:href="@{/search}" href="/search">Search</a>
-                </li>
-            </ul>
-            <ul sec:authorize="!isAuthenticated()"
-                class="navbar-nav mr-auto"></ul>
-            <ul class="navbar-nav">
-                <li sec:authorize="isAuthenticated()"
-                    class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownUser" role="button"
-                       data-toggle="dropdown"
-                       aria-haspopup="true" aria-expanded="false">
-                        <span th:text="${@userService.getCurrentUserName()}"/>
-                    </a>
-                    <div class="dropdown-menu" aria-labelledby="navbarDropdownUser">
-                        <th:block sec:authorize="hasRole('ROLE_ADMIN')">
-                            <a th:href="@{/admin/users}" class="dropdown-item">View Users</a>
-                            <a th:href="@{/admin/create-service-account}" class="dropdown-item">Create Service Account</a>
-                        </th:block>
-                        <a class="dropdown-item" th:href="@{/user/password}" href="/user/password">Change Password</a>
-                        <a class="dropdown-item" th:href="@{/logout}" href="/logout">Logout</a>
-                    </div>
-                </li>
-                <li sec:authorize="!isAuthenticated()"
-                    class="nav-item">
-                    <a class="nav-link" th:href="@{/login}" href="/login">Login &amp; Registration</a>
-                </li>
-            </ul>
-        </div>
-    </div>
-</nav>
+                <li class="nav-item">	
+                    <a style="color:white" class="nav-link" th:href="@{/user/profile}" href="/user/profile">-Profile-</a>	
+                </li>	
+                <li class="nav-item dropdown">	
+                    <!--suppress HtmlUnknownTarget -->	
+                    <a style="color:white" class="nav-link dropdown-toggle" href="/user/model" id="navbarDropdownModel" role="button"	
+                       data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">-Model Organisms-</a>	
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdownModel">	
+                        <a th:each="taxon : ${@taxonService.findByActiveTrue()}"	
+                           class="dropdown-item"	
+                           th:href="@{/user/model/{taxonId}(taxonId=${taxon.id})}"	
+                           th:classappend="${@userService.findCurrentUser()?.hasTaxon(taxon)} ? 'hastaxon' : ''">	
+         <span th:if="${taxon.commonName=='e. coli'}"><i>E. coli</i></span>	
+            <span th:unless="${taxon.commonName=='e. coli'}" th:text="${#strings.capitalizeWords(taxon.commonName)}">...</span>	
+</a>	
+                    </div>	
+                </li>	
+<!--	
+                <li class="nav-item">	
+                    <a style="color:white" class="nav-link" th:href="@{/user/documentation}" href="/user/documentation">Instructions</a>	
+                </li>	
+                <li class="nav-item">	
+                    <a style="color:white" class="nav-link" th:href="@{/user/faq}" href="/user/faq">FAQ</a>	
+                </li>	
+                <li class="nav-item">	
+                    <a style="color:white" class="nav-link" th:href="@{/user/support}" href="/user/support">Contact</a>	
+                </li>	
+-->	
+                <li sec:authorize="hasPermission(null, 'search')"	
+                    class="nav-item">	
+                    <a style="color:white" class="nav-link" th:href="@{/search}" href="/search">-Search-</a>	
+                </li>	
+                <li class="nav-item">	
+                    <a style="color:white" class="nav-link" href="https://www.modelmatcher.net/register" target="_blank">-Match Dashboard-</a>	
+                </li>	
+            </ul>	
+            <ul sec:authorize="!isAuthenticated()"	
+                class="navbar-nav mr-auto"></ul>	
+            <ul class="navbar-nav">	
+                <li sec:authorize="isAuthenticated()"	
+                    class="nav-item dropdown">	
+                    <a style="color:white" class="nav-link dropdown-toggle" href="#" id="navbarDropdownUser" role="button"	
+                       data-toggle="dropdown"	
+                       aria-haspopup="true" aria-expanded="false">	
+                        <span th:text="${@userService.getCurrentUserName()}"/>	
+                    </a>	
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdownUser">	
+                        <th:block sec:authorize="hasRole('ROLE_ADMIN')">	
+                            <a th:href="@{/admin/users}" class="dropdown-item">View Users</a>	
+                            <a th:href="@{/admin/create-service-account}" class="dropdown-item">Create Service Account</a>	
+                        </th:block>	
+                        <a class="dropdown-item" th:href="@{/user/password}" href="/user/password">Change Password</a>	
+                        <a class="dropdown-item" th:href="@{/logout}" href="/logout">Logout</a>	
+                    </div>	
+                </li>	
+                <li sec:authorize="!isAuthenticated()"	
+                    class="nav-item">	
+                    <a style="color:white" class="nav-link" href="https://www.modelmatcher.net/login.html">Login &amp; Registration</a>	
+                </li>	
+            </ul>	
+        </div>	
+    </div></nav>
 <div th:fragment="title(title,subtitle)"
      class="row mb-3">
     <h1 class="border-right col-auto my-auto" th:text="${title}">...</h1>
-    <p th:if="${subtitle}"
+    <h3 th:if="${subtitle}"
        th:text="${subtitle}"
-       class="col-auto my-auto">...</p>
+       class="col-auto my-auto">...</h3>
 </div>
 <div th:fragment="message"
      th:if="${message}"
@@ -123,12 +122,8 @@
     </div>
 </div>
 <footer th:fragment="footer" class="footer text-center py-3">
-    <span class="text-muted d-inline-block">
-        &copy; Copyright 2018.
-        &quot;<span th:text="#{rdp.site.fullname}"></span>&quot;
-        All rights reserved.
-    </span>
-    <a class="d-inline-block" th:href="@{/user/support}" href="/user/support">Contact Support</a>
+<img th:src="@{${'/images/cc.png'}}" style="max-width:5%"></img>	
+    <a class="d-inline-block" target="_blank" href="https://www.modelmatcher.net/Contact.html">Contact Support</a> 
 </footer>
 <th:block th:fragment="scripts">
     <!-- Latest compiled and minified JavaScript -->
@@ -151,8 +146,8 @@
             crossorigin="=anonymous"></script>
     <script th:src="@{/js/common.js}"></script>
     <script sec:authorize="isAuthenticated()" th:src="@{/js/activity-monitor.js}"></script>
-    <!-- Global site tag (gtag.js) - Google Analytics -->
-    <th:block th:if="${@siteSettings.gaTracker}">
+    <th:block th:unless="${#strings.isEmpty(@siteSettings.gaTracker)}">
+        <!-- Global site tag (gtag.js) - Google Analytics -->
         <script th:src="@{https://www.googletagmanager.com/gtag/js(id=${@siteSettings.gaTracker})}"></script>
         <script th:inline="javascript">
             window.dataLayer = window.dataLayer || [];

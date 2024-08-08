@@ -33,6 +33,9 @@ import java.util.stream.Collectors;
 @CommonsLog
 public class User implements UserContent {
 
+//    public static Comparator<? super User> getComparator() {
+//    }
+
     /**
      * Constraints for regular user accounts.
      */

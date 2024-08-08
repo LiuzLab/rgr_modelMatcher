@@ -6,12 +6,18 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.ReloadableResourceBundleMessageSource;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.context.annotation.Profile;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
 
 /**
  * Created by mjacobson on 16/01/18.
  */
 @Configuration
 public class WebMvcConfig extends WebMvcConfigurerAdapter {
+
+//public class WebMvcConfig{
+
 
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {

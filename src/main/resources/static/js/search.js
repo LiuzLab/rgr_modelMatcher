@@ -6,14 +6,34 @@
         var element = $(this);
         var userId = element.data('user-id');
         var anonymousUserId = element.data('anonymous-user-id');
-        $.get(anonymousUserId ? '/search/view/user-preview/by-anonymous-id/' + anonymousUserId : '/search/view/user-preview/' + userId, function (data) {
-            element.popover({
-                container: 'body',
-                trigger: 'hover tooltip',
-                html: true,
-                content: data
+        var remoteHost = element.data('remote-host');
+        var popoverUrl = '/search/view/user-preview/';
+        if (anonymousUserId) {
+            popoverUrl += 'by-anonymous-id/' + encodeURIComponent(anonymousUserId);
+        } else {
+            popoverUrl += encodeURIComponent(userId);
+        }
+        $.get(popoverUrl, remoteHost ? {'remoteHost': remoteHost} : {})
+            .done(function (data, textStatus, jqXHR) {
+                /* handle no content status code when the popover is empty */
+                if (jqXHR.status === 204) {
+                    return;
+                }
+                element.popover({
+                    container: 'body',
+                    trigger: 'hover tooltip',
+                    html: true,
+                    content: data
+                });
+            })
+            .fail(function (data) {
+                element.popover({
+                    container: 'body',
+                    trigger: 'hover tooltip',
+                    html: true,
+                    content: data
+                });
             });
-        });
     }
 
     function checkItl(itlChbox) {
@@ -56,6 +76,7 @@
             }
             tableContainer.find('[data-toggle="tooltip"]').tooltip();
             tableContainer.find('.user-preview-popover').each(initializeUserPreviewPopover);
+            console.log("tableContainer", responseText, tableContainer)
         });
 
         // Show orthologs
@@ -70,6 +91,7 @@
                 }
                 orthologContainer.find('[data-toggle="tooltip"]').tooltip();
                 orthologContainer.find('.user-preview-popover').each(initializeUserPreviewPopover);
+                console.log("orthologContainer", responseText , orthologContainer)
             });
         }
 
@@ -83,6 +105,8 @@
                     itlTableContainer.html(responseText);
                 }
                 itlTableContainer.find('[data-toggle="tooltip"]').tooltip();
+                itlTableContainer.find('.user-preview-popover').each(initializeUserPreviewPopover);
+                console.log("itlTableContainer", responseText , itlTableContainer)
             });
         }
 
@@ -115,6 +139,7 @@
             delay: 500,
             source: function (request, response) {
                 var term = request.term;
+                console.log('GOT Term :: ', term);
 
                 var taxonId = taxonSelect.val();
                 if (!(taxonId in cache)) {
@@ -128,26 +153,33 @@
                     return;
                 }
 
-                if (term.includes(",")) {
+                if (term.indexOf(",") !== -1) {
                     return;
                 }
-
+                console.log(`Calling backend on !! ${"a" + encodeURIComponent(taxonId) + "/gene/search/" + encodeURIComponent(term) + `{ max: 10 }`}`);
                 // noinspection JSUnusedLocalSymbols
-                $.getJSON("/taxon/" + taxonId + "/gene/search/" + term + "?max=10", request, function (data, status, xhr) {
-
-                    if (!data.length) {
-                        data = [
-                            {
-                                noresults: true,
-                                label: 'No matches found',
-                                value: term
-                            }
-                        ];
-                    }
-
-                    taxonCache[term] = data;
-                    response(data);
-                });
+                // $.getJSON("/taxon/" + encodeURIComponent(taxonId) + "/gene/search", {query: term, max: 10})
+                $.getJSON("/taxon/" + encodeURIComponent(taxonId) + "/gene/search/" + encodeURIComponent(term), { max: 10 })
+                    .done(function (data, status, xhr) {
+                        console.log('data start : ', data);
+                        if (!data.length) {
+                            data = [
+                                {
+                                    noresults: true,
+                                    label: 'No matches found',
+                                    value: term
+                                }
+                            ];
+                        }
+                        taxonCache[term] = data;
+                        console.log('data from autoComplete : ', data);
+                        response(data);
+                    })
+                    .fail(function () {
+                        console.log('ERROR : autoComplete : ');
+                        response([{noresults: true, label: 'Error querying search endpoint.', value: term}]);
+                    });
+                console.log('auto complete ended :|');
             },
             select: function (event, ui) {
                 autocomplete.val(ui.item.match.symbol);

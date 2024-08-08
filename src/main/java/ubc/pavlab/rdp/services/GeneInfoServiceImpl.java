@@ -73,8 +73,26 @@ public class GeneInfoServiceImpl implements GeneInfoService {
     }
 
     @Override
+    public Collection<GeneInfo> findBySymbolListInAndTaxon(Collection<String> symbols, Taxon taxon) {
+        // Ensure the symbols and taxon are not null
+        if (symbols == null || taxon == null) {
+            throw new IllegalArgumentException("Symbols collection and Taxon must not be null");
+        }
+
+        // If the taxon ID is 99999, set it to 9606
+        if (taxon.getId() == 99999) {
+            taxon.setId(9606);
+        }
+
+        return symbols.stream()
+                .map(symbol -> geneInfoRepository.findBySymbolAndTaxon(symbol, taxon))
+                .filter(Objects::nonNull) // Ensure that null values are not added to the list
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public Collection<SearchResult<GeneInfo>> autocomplete( String query, Taxon taxon, int maxResults ) {
-        if (taxon.getId() ==99999){
+        if (taxon.getId() == 99999){
             taxon.setId(9606);
         }
 
@@ -99,6 +117,7 @@ public class GeneInfoServiceImpl implements GeneInfoService {
 
         return results;
     }
+
 
     @Override
     public void updateGenes() {

@@ -42,37 +42,38 @@
     }
 
     function addGeneRow(data) {
-
         var table = geneTable.DataTable();
         var rows = [];
-
         for (var symbol in data) {
             if (data.hasOwnProperty(symbol)) {
-
                 var gene = data[symbol];
                 var row = [];
-
                 if (gene === null) {
                     window.console.log("Issue obtaining metadata for: " + symbol);
                     row.push('<span class="align-middle text-danger"><i class="delete-row align-middle"></i>' + symbol + '</span>');
                     row.push('');
-                    row.push('<span class="align-middle text-danger">Could Not Find Gene.</span>');
+                    row.push('<span class="align-middle text-danger">Could not find gene for provided gene identifier.</span>');
                     row.push('');
-                    row.push('');
+                    if (customizableGeneLevel) {
+                        row.push('');
+                    }
                 } else {
-                    row.push('<span class="align-middle"><i class="delete-row align-middle"></i><a href="https://www.ncbi.nlm.nih.gov/gene/' + gene.geneId + '" target="_blank" class="align-middle" rel="noopener">' + gene.symbol + '</a></span>');
-                    row.push(gene.geneId);
+                    var geneId = gene.geneId + '';
+                    /* gene is already in the table */
+                    if (table.column(1).data().indexOf(geneId + '') !== -1) {
+                        continue;
+                    }
+                    row.push('<span class="align-middle"><i class="delete-row align-middle"></i><a href="https://www.ncbi.nlm.nih.gov/gene/' + encodeURIComponent(geneId) + '" target="_blank" class="align-middle" rel="noopener">' + gene.symbol + '</a></span>');
+                    row.push(geneId + '');
                     row.push('<span class="align-middle">' + gene.name + '</span>');
                     row.push('<input name="primary" class="align-middle" type="checkbox"/>');
                     if (customizableGeneLevel) {
                         var privacyOptions = enabledGenePrivacyLevels.map(function (k) {
                             var privacyLevel = privacyLevels[k];
                             if (privacyLevel.ordinal !=1) {
-                                return '<option' +
-                                    ' value="' + privacyLevel.ordinal + '"' +
+                                return '<option value="' + privacyLevel.ordinal + '"' +
                                     (privacyLevel.ordinal === userPrivacyLevel.ordinal ? ' selected' : '') + '>' +
-                                    privacyLevel.label +
-                                    '</option>';
+                                    privacyLevel.label + '</option>';
                             } else {
                                 return '';
                             }
@@ -89,39 +90,38 @@
             .addClass('new-row');
 
         table.columns.adjust().draw();
+
+        return rows.length;
     }
 
     function addTermRow(data) {
-
         var table = termTable.DataTable();
         var rows = [];
-
         for (var goId in data) {
             if (data.hasOwnProperty(goId)) {
-
                 var term = data[goId];
                 var row = [];
-
                 if (term === null) {
                     window.console.log("Issue obtaining metadata for: " + goId);
                     row.push('<span class="align-middle text-danger"><i class="delete-row align-middle"></i>' + goId + '</span>');
-                    row.push('<span class="align-middle text-danger">Could Not Find Term.</span>');
+                    row.push('<span class="align-middle text-danger">Could not find term for provided GO identifier.</span>');
                     row.push('');
                     row.push('');
                     row.push('');
                 } else {
+                    if (table.column(0).data().indexOf(term.goId) !== -1) {
+                        continue;
+                    }
                     row.push('<span class="align-middle">' +
                         '<i class="delete-row"></i>' +
-                        '<a href="http://www.ebi.ac.uk/QuickGO/GTerm?id=' + term.goId + '" ' +
+                        '<a href="https://www.ebi.ac.uk/QuickGO/GTerm?id=' + encodeURIComponent(term.goId) + '" ' +
                         'target="_blank" data-toggle="tooltip" class="align-middle" title="' + term.definition + '">' + term.goId + '</a></span>');
                     row.push('<span class="align-middle">' + term.name + '</span>');
                     row.push('<span class="align-middle">' + term.aspect + '</span>');
-                    row.push('<a href="#" class="align-middle overlap-show-modal" data-toggle="modal" data-target="#overlapModal">' + term.frequency + '</a>');
+                    row.push('<a href="#" class="align-middle overlap-show-modal" data-toggle="modal" data-target="#overlapModal" data-go-id="' + term.goId + '">' + term.frequency + '</a>');
                     row.push('<span class="align-middle">' + term.size + '</span>');
                 }
-
                 rows.push(row);
-
             }
         }
 
@@ -131,6 +131,8 @@
         // .find('[data-toggle="tooltip"]').tooltip();
 
         table.columns.adjust().draw();
+
+        return rows.length;
     }
 
     $.fn.dataTable.ext.order['dom-checkbox'] = function (settings, col) {
@@ -139,14 +141,14 @@
         });
     };
 
-    var columnDefs = [
+    var geneTableColumnDefs = [
         {"name": "Symbol", "targets": 0},
         {"name": "Id", "targets": 1, "visible": false},
         {"name": "Name", "targets": 2},
         {"name": "Primary", "targets": 3, "className": "text-center", "orderDataType": "dom-checkbox"}];
 
     if (customizableGeneLevel) {
-        columnDefs.push({
+        geneTableColumnDefs.push({
             "name": "PrivacyLevel",
             "targets": 4,
             "className": "text-center",
@@ -160,8 +162,8 @@
         "paging": false,
         "searching": false,
         "info": false,
-        "order": [[0, "desc"]],
-        "columnDefs": columnDefs
+        "order": [[0, "asc"]],
+        "columnDefs": geneTableColumnDefs
     });
 
     termTable.DataTable({
@@ -170,7 +172,7 @@
         "paging": false,
         "searching": false,
         "info": false,
-        "order": [[0, "desc"]]
+        "order": [[0, "asc"]]
     });
 
     var initialModel = collectModel();
@@ -194,14 +196,14 @@
             success: function () {
                 $('.success-row').show();
                 $('.error-row').hide();
-                spinner.addClass("d-none");
+                spinner.toggleClass("d-none", true);
                 initialModel = collectModel();
                 $('.new-row').removeClass("new-row");
             },
             error: function () {
                 $('.success-row').hide();
                 $('.error-row').show();
-                spinner.addClass("d-none");
+                spinner.toggleClass("d-none", false);
             }
         });
     });
@@ -227,24 +229,28 @@
                     return;
                 }
 
-                if (term.includes(",")) {
+                if (term.indexOf(",") !== -1) {
                     return;
                 }
 
-                $.getJSON("/taxon/" + currentTaxonId + "/gene/search/" + term + "?max=10", request, function (data) {
-                    if (!data.length) {
-                        data = [
-                            {
-                                noresults: true,
-                                label: 'No matches found',
-                                value: term
-                            }
-                        ];
-                    }
-
-                    cache[term] = data;
-                    response(data);
-                });
+                // $.getJSON("/taxon/" + encodeURIComponent(currentTaxonId) + "/gene/search", {query: term, max: 10})
+                $.getJSON("/taxon/" + encodeURIComponent(currentTaxonId) + "/gene/search/" + encodeURIComponent(term), { max: 10 })
+                    .done(function (data) {
+                        if (!data.length) {
+                            data = [
+                                {
+                                    noresults: true,
+                                    label: 'No matches found',
+                                    value: term
+                                }
+                            ];
+                        }
+                        cache[term] = data;
+                        response(data);
+                    })
+                    .fail(function () {
+                        response([{noresults: true, label: 'Error querying search endpoint.', value: term}]);
+                    });
             },
             select: function (event, ui) {
                 autocomplete.val(ui.item.match.symbol);
@@ -303,19 +309,19 @@
         var spinner = self.find('.spinner');
         spinner.removeClass("d-none");
 
+        var encodedSymbols = symbols.reduce(function (encoded, symbol) {
+            return encoded + (encoded === '' ? '' : '&') + 'symbols' + '=' + encodeURIComponent(symbol);
+        }, '');
 
         $.ajax({
-            type: "POST",
-            url: '/taxon/' + currentTaxonId + '/gene/search',
-            data: JSON.stringify(symbols),
-            contentType: "application/json",
-            success: function (data) {
-                addGeneRow(data);
-            }
-
-        }).always(function () {
-            spinner.addClass("d-none");
-        });
+            type: 'GET',
+            url: '/taxon/' + encodeURIComponent(currentTaxonId) + '/gene/search',
+            data: encodedSymbols
+        })
+            .done(addGeneRow)
+            .always(function () {
+                spinner.toggleClass('d-none', true);
+            });
         $(this).closest('.input-group').find('input').val("");
     });
 
@@ -334,24 +340,26 @@
                     return;
                 }
 
-                if (term.includes(",")) {
+                if (term.indexOf(",") !== -1) {
                     return;
                 }
-                $.getJSON("/taxon/" + currentTaxonId + "/term/search/" + term + "?max=10", request, function (data) {
-
-                    if (!data.length) {
-                        data = [
-                            {
-                                noresults: true,
-                                label: 'No matches found',
-                                value: term
-                            }
-                        ];
-                    }
-
-                    cache[term] = data;
-                    response(data);
-                });
+                $.getJSON("/taxon/" + encodeURIComponent(currentTaxonId) + "/term/search", {query: term, max: 10})
+                    .done(function (data) {
+                        if (!data.length) {
+                            data = [
+                                {
+                                    noresults: true,
+                                    label: 'No matches found',
+                                    value: term
+                                }
+                            ];
+                        }
+                        cache[term] = data;
+                        response(data);
+                    })
+                    .fail(function () {
+                        response([{noresults: true, label: 'Error querying search endpoint.', value: term}]);
+                    });
             },
             select: function (event, ui) {
                 autocomplete.val(ui.item.match.goId);
@@ -411,19 +419,20 @@
         var spinner = self.find('.spinner');
         spinner.removeClass("d-none");
 
+        var encodedGoIds = ids.reduce(function (encoded, id) {
+            return encoded + (encoded === '' ? '' : '&') + 'goIds' + '=' + encodeURIComponent(id);
+        }, '');
+
 
         $.ajax({
-            type: "POST",
-            url: '/user/taxon/' + currentTaxonId + '/term/search',
-            data: JSON.stringify(ids),
-            contentType: "application/json",
-            success: function (data) {
-                addTermRow(data);
-            }
-
-        }).always(function () {
-            spinner.addClass("d-none");
-        });
+            type: 'GET',
+            url: '/user/taxon/' + encodeURIComponent(currentTaxonId) + '/term/search',
+            data: encodedGoIds
+        })
+            .done(addTermRow)
+            .always(function () {
+                spinner.toggleClass("d-none", true);
+            });
         $(this).closest('.input-group').find('input').val("");
     });
 
@@ -432,31 +441,37 @@
         var recommendMessage = $('#terms').find('.recommend-message');
         spinner.toggleClass("d-none", false);
         recommendMessage.toggleClass('d-none', true);
-        $.getJSON("/user/taxon/" + currentTaxonId + "/term/recommend", function (data) {
-            try {
-                addTermRow(data);
-                if (data.length > 0) {
+        $.getJSON("/user/taxon/" + encodeURIComponent(currentTaxonId) + "/term/recommend")
+            .done(function (data) {
+                var addedTerms = addTermRow(data);
+                if (addedTerms > 0) {
                     recommendMessage
-                        .text('Recommended ' + data.length + ' terms')
+                        .text('Recommended ' + addedTerms + ' terms.')
                         .toggleClass('alert-success', true)
-                        .toggleClass('alert-danger', false)
-                        .toggleClass('d-none', false);
+                        .toggleClass('alert-danger', false);
                 } else {
                     recommendMessage
                         .text('Could not recommend new terms. Try adding more genes and make sure you click the save button.')
                         .toggleClass('alert-success', false)
-                        .toggleClass('alert-danger', true)
-                        .toggleClass('d-none', false);
+                        .toggleClass('alert-danger', true);
                 }
-            } finally {
+            })
+            .fail(function () {
+                recommendMessage
+                    .text('There was an error in attempting to retrieve recommended terms.')
+                    .toggleClass('alert-success', false)
+                    .toggleClass('alert-danger', true);
+            })
+            .always(function () {
                 spinner.toggleClass("d-none", true);
-            }
-        });
+                recommendMessage.toggleClass('d-none', false);
+                $('#terms-tab').tab('show');
+            });
     });
 
     $('#overlapModal').on('show.bs.modal', function (e) {
-        var goId = $(e.relatedTarget).closest('tr').find('td')[0].innerText;
-        $("#overlapModal").find(".modal-body").load("/user/taxon/" + currentTaxonId + "/term/" + goId + "/gene/view");
+        var goId = $(e.relatedTarget).data('go-id');
+        $("#overlapModal").find(".modal-body").load("/user/taxon/" + encodeURIComponent(currentTaxonId) + "/term/" + encodeURIComponent(goId) + "/gene/view");
     });
 
     $('#terms-tab').on('shown.bs.tab', function () {
