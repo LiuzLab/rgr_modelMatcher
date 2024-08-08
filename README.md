@@ -3,13 +3,8 @@
 Registry for model organism researchers, developed for the Canadian Rare
 Disease Models &amp; Mechanisms Network
 
-```
-sudo java -Xmx1024m -Dserver.port=8080 -Dspring.profiles.active=beta -jar rdp-1.5.0-SNAPSHOT.jar
-```
-
 
 ```
-sudo java -Xmx1024m -Dserver.port=8080 -Dspring.profiles.active=beta -jar target/ModelMatcher.jar
+sudo java -Xmx1024m -Dserver.port=<PORT>  -Dspring.profiles.active=<PROFILE> -jar <TARGET_JAR_FILE>
 ```
 
-`Schizosaccharomyces_pombe.gene_info```
