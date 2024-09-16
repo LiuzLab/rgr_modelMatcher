@@ -105,4 +105,6 @@ public interface UserService {
     long computeTermFrequency( User user, GeneOntologyTerm term );
 
     void sendGeneAccessRequest(User requestingUser, UserGene userGene, String reason);
+
+    long getTotalUserCount();
 }

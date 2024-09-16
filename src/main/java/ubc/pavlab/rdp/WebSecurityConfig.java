@@ -2,6 +2,7 @@ package ubc.pavlab.rdp;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
+import org.springframework.core.env.Environment;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.access.PermissionEvaluator;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -40,6 +41,9 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     private MessageSource messageSource;
 
     @Autowired
+    private Environment environment;
+
+    @Autowired
     PermissionEvaluator permissionEvaluator;
 
     @Override
@@ -58,50 +62,107 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .expressionHandler( expressionHandler );
     }
 
+//    @Override
+//    protected void configure( HttpSecurity http ) throws Exception {
+//        http
+//                // allow _method in HTML form
+//                .addFilterAfter( new HiddenHttpMethodFilter(), BasicAuthenticationFilter.class )
+//                .authorizeRequests()
+//                    // public endpoints
+//                    .antMatchers( "/", "/login", "/registration", "/registrationConfirm", "/stats", "/stats.html",
+//                            "/forgotPassword", "/resetPassword", "/updatePassword", "/resendConfirmation", "/search/**",
+//                            "/userView/**", "/taxon/**", "/access-denied", "/scientistRegistry/**" )
+//                        .permitAll()
+//                    // API for international search
+//                    .antMatchers("/api/**")
+//                        .permitAll()
+//                    // administrative endpoints
+//                    .antMatchers( "/admin/**" )
+//                        .hasRole( "ADMIN" )
+//                    // user endpoints
+//                    .antMatchers( "/user/**" )
+//                        .hasAnyRole("USER", "ADMIN")
+//                    //  Match DashBoard endpoints
+//
+//                    .antMatchers( "/scientistRegistry/**" ).permitAll() // Change later to only permit from //   .hasAnyRole("MATCH_DASHBOARD")
+//                    .and()
+//                // TODO: we should fully comply with CSRF
+//                .csrf()
+//                    .disable()
+//                .formLogin()
+//                    .loginPage( "/login" )
+//                    .usernameParameter( "email" )
+//                    .passwordParameter( "password" )
+//                    .defaultSuccessUrl( "/" )
+//                    .failureUrl( "/login?error=true" )
+//                    .and()
+//                .rememberMe()
+//                    .rememberMeCookieName( messageSource.getMessage("rdp.site.shortname", null, Locale.getDefault()) + "-remember-me" )
+//                    .tokenValiditySeconds( 7 * 24 * 60 * 60 )
+//                    .and()
+//                .logout()
+//                    .logoutRequestMatcher( new AntPathRequestMatcher( "/logout" ) )
+//                    .logoutSuccessUrl( "/" )
+//                    .and()
+//                .exceptionHandling()
+//                    .accessDeniedPage( "/access-denied" )
+//                    .and();
+//
+//    }
+
     @Override
-    protected void configure( HttpSecurity http ) throws Exception {
+    protected void configure(HttpSecurity http) throws Exception {
         http
                 // allow _method in HTML form
-                .addFilterAfter( new HiddenHttpMethodFilter(), BasicAuthenticationFilter.class )
+                .addFilterAfter(new HiddenHttpMethodFilter(), BasicAuthenticationFilter.class)
                 .authorizeRequests()
-                    // public endpoints
-                    .antMatchers( "/", "/login", "/registration", "/registrationConfirm", "/stats", "/stats.html",
-                            "/forgotPassword", "/resetPassword", "/updatePassword", "/resendConfirmation", "/search/**",
-                            "/userView/**", "/taxon/**", "/access-denied", "/scientistRegistry/**" )
-                        .permitAll()
-                    // API for international search
-                    .antMatchers("/api/**")
-                        .permitAll()
-                    // administrative endpoints
-                    .antMatchers( "/admin/**" )
-                        .hasRole( "ADMIN" )
-                    // user endpoints
-                    .antMatchers( "/user/**" )
-                        .hasAnyRole("USER", "ADMIN")
-                    //  Match DashBoard endpoints
-                    .antMatchers( "/scientistRegistry/**" ).permitAll() // Chnage later to only permit from //   .hasAnyRole("MATCH_DASHBOARD")
-                    .and()
-                // TODO: we should fully comply with CSRF
-                .csrf()
-                    .disable()
-                .formLogin()
-                    .loginPage( "/login" )
-                    .usernameParameter( "email" )
-                    .passwordParameter( "password" )
-                    .defaultSuccessUrl( "/" )
-                    .failureUrl( "/login?error=true" )
-                    .and()
-                .rememberMe()
-                    .rememberMeCookieName( messageSource.getMessage("rdp.site.shortname", null, Locale.getDefault()) + "-remember-me" )
-                    .tokenValiditySeconds( 7 * 24 * 60 * 60 )
-                    .and()
-                .logout()
-                    .logoutRequestMatcher( new AntPathRequestMatcher( "/logout" ) )
-                    .logoutSuccessUrl( "/" )
-                    .and()
-                .exceptionHandling()
-                    .accessDeniedPage( "/access-denied" )
-                    .and();
+                // public endpoints
+                .antMatchers("/", "/login", "/registration", "/registrationConfirm", "/stats", "/stats.html",
+                        "/forgotPassword", "/resetPassword", "/updatePassword", "/resendConfirmation", "/search/**",
+                        "/userView/**", "/taxon/**", "/access-denied")
+                .permitAll()
+                // API for international search
+                .antMatchers("/api/**")
+                .permitAll()
+                // administrative endpoints
+                .antMatchers("/admin/**")
+                .hasRole("ADMIN")
+                // user endpoints
+                .antMatchers("/user/**")
+                .hasAnyRole("USER", "ADMIN");
 
+        // Conditionally permit access to "/scientistRegistry/**" based on active profile
+        if (environment.acceptsProfiles("beta")) {
+            http.authorizeRequests()
+                    .antMatchers("/scientistRegistry/**").permitAll();
+        } else {
+            // further define the behavior if the beta profile is not active
+            // For example, you might want to restrict access or apply other roles
+            // http.authorizeRequests()
+            //    .antMatchers("/scientistRegistry/**").hasAnyRole("MATCH_DASHBOARD");
+        }
+
+        http
+                // Disable CSRF for demonstration purposes; you may need to enable it for production
+                .csrf()
+                .disable()
+                .formLogin()
+                .loginPage("/login")
+                .usernameParameter("email")
+                .passwordParameter("password")
+                .defaultSuccessUrl("/")
+                .failureUrl("/login?error=true")
+                .and()
+                .rememberMe()
+                .rememberMeCookieName(messageSource.getMessage("rdp.site.shortname", null, Locale.getDefault()) + "-remember-me")
+                .tokenValiditySeconds(7 * 24 * 60 * 60) // 7 days
+                .and()
+                .logout()
+                .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
+                .logoutSuccessUrl("/")
+                .and()
+                .exceptionHandling()
+                .accessDeniedPage("/access-denied");
     }
 }
+

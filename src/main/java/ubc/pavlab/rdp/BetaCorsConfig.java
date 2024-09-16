@@ -1,5 +1,6 @@
 package ubc.pavlab.rdp;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -20,6 +21,10 @@ public class BetaCorsConfig {
     @Bean
     public WebMvcConfigurer betaCorsConfigurer() {
         return new WebMvcConfigurer() {
+
+            @Value("${ui.host.public.ip}")
+            private String UI_HostPublicIP;
+
             @Override
             public void configurePathMatch(PathMatchConfigurer pathMatchConfigurer) {
 
@@ -60,7 +65,7 @@ public class BetaCorsConfig {
                 registry.addMapping("/**")
                         .allowedOrigins("https://localhost:8080",
                                 "http://localhost:8080", "https://localhost:8081", "http://localhost:8081",
-                                "http://localhost:4200", "http://localhost:3000")  // Adjust as per your beta environment
+                                "http://localhost:4200", "http://localhost:3000", "http://"+UI_HostPublicIP+":4200")  // Adjust as per your beta environment
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
                         .allowCredentials(true);

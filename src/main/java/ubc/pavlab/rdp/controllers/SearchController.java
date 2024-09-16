@@ -31,7 +31,7 @@ import ubc.pavlab.rdp.model.enums.ResearcherPosition;
 import ubc.pavlab.rdp.model.enums.TierType;
 import ubc.pavlab.rdp.services.*;
 import ubc.pavlab.rdp.services.OrganInfoService;
-import ubc.pavlab.rdp.util.MetricsUpdater;
+//import ubc.pavlab.rdp.util.MetricsUpdater;
 
 import javax.validation.Valid;
 import java.net.URI;
@@ -85,8 +85,8 @@ public class SearchController {
     @Autowired
     private ApplicationEventPublisher eventPublisher;
 
-    @Autowired
-    private MetricsUpdater metricsUpdater;
+//    @Autowired
+//    private MetricsUpdater metricsUpdater;
 
     @PreAuthorize("hasPermission(null, 'search')")
     @GetMapping(value = "/search")
@@ -415,9 +415,9 @@ public class SearchController {
 
         long endTime = System.nanoTime();
         long durationInMillis = (endTime - startTime) / 1_000_000;
-        metricsUpdater.updateGauge(SEARCH_API_RESPONSE_TIME, ((double)durationInMillis));
+//        metricsUpdater.updateGauge(SEARCH_API_RESPONSE_TIME, ((double)durationInMillis));
         log.info( MessageFormat.format( "< Search Response time :: {0} ms >\n", durationInMillis ));
-        metricsUpdater.incrementCounter(SEARCH_API_REQUEST_COUNT);
+//        metricsUpdater.incrementCounter(SEARCH_API_REQUEST_COUNT);
         return modelAndView;
     }
 

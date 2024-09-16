@@ -160,6 +160,7 @@
                 // noinspection JSUnusedLocalSymbols
                 // $.getJSON("/taxon/" + encodeURIComponent(taxonId) + "/gene/search", {query: term, max: 10})
                 $.getJSON("/taxon/" + encodeURIComponent(taxonId) + "/gene/search/" + encodeURIComponent(term), { max: 10 })
+                // $.getJSON("/taxon/" + encodeURIComponent(taxonId) + "/gene/search", { symbols: term, max: 10 })
                     .done(function (data, status, xhr) {
                         console.log('data start : ', data);
                         if (!data.length) {

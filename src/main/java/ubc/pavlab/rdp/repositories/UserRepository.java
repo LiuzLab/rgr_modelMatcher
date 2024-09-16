@@ -44,7 +44,8 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     Collection<User> findByProfileDescriptionContainingIgnoreCaseOrTaxonDescriptionsContainingIgnoreCase(
             String descriptionLike, String taxonDescriptionLike );
 
+    // Custom query to count all users based on user_id
+    @Query("SELECT COUNT(u) FROM User u")
+    long countAllUsersById();
 
-//    @Query("select user, from User user left join fetch user.roles where lower(user.email) = lower(:email)")
-//    User findByEmailIgnoreCaseChangeFieldNames( @Param("email") String email );
 }

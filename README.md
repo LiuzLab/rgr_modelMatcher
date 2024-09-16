@@ -12,4 +12,3 @@ sudo java -Xmx1024m -Dserver.port=8080 -Dspring.profiles.active=beta -jar rdp-1.
 sudo java -Xmx1024m -Dserver.port=8080 -Dspring.profiles.active=beta -jar target/ModelMatcher.jar
 ```
 
-`Schizosaccharomyces_pombe.gene_info```

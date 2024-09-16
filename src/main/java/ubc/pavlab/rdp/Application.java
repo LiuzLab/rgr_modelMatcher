@@ -19,9 +19,9 @@ public class Application {
         SpringApplication.run( Application.class, args );
     }
 
-    @Bean
-    public MetricsUpdater metricsUpdater(MeterRegistry registry) {
-        return new MetricsUpdater(registry);
-    }
+//    @Bean
+//    public MetricsUpdater metricsUpdater(MeterRegistry registry) {
+//        return new MetricsUpdater(registry);
+//    }
 
 }
