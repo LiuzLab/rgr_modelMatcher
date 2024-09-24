@@ -100,6 +100,8 @@ public class UserController {
     public ModelAndView profile() {
         ModelAndView modelAndView = new ModelAndView( "user/profile" );
         User user = userService.findCurrentUser();
+
+        log.info( MessageFormat.format( "USER profile :: \n  {0} ", user ) );
         modelAndView.addObject( "user", user );
         modelAndView.addObject( "viewOnly", null );
         return modelAndView;
@@ -244,7 +246,7 @@ public class UserController {
     @PostMapping(value = "/user/profile", produces = MediaType.TEXT_PLAIN_VALUE)
     public String saveProfile( @RequestBody ProfileWithOrganUberonIds profileWithOrganUberonIds ) {
         User user = userService.findCurrentUser();
-        userService.updateUserProfileAndPublicationsAndOrgans( user, profileWithOrganUberonIds.profile, profileWithOrganUberonIds.profile.getPublications(), profileWithOrganUberonIds.organUberonIds );
+//        userService.updateUserProfileAndPublicationsAndOrgans( user, profileWithOrganUberonIds.profile, profileWithOrganUberonIds.profile.getPublications(), profileWithOrganUberonIds.organUberonIds );
         return "Saved.";
     }
 

@@ -49,7 +49,11 @@ public class CacheService {
      * This task make sure that the updates are performed in a logical order (i.e. genes are updated prior to ortholog
      * relationships and user-gene associations).
      */
-    @Scheduled(cron = UPDATE_CACHE_CRON)
+    /**
+     * Temp removing at cron job for updating and only running it on startup.
+     * **/
+//    @Scheduled(cron = UPDATE_CACHE_CRON)
+
     @EventListener(ApplicationReadyEvent.class)
     public void updateCache() {
         ApplicationSettings.CacheSettings cacheSettings = applicationSettings.getCache();

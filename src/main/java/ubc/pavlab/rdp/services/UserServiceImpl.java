@@ -439,6 +439,7 @@ public class UserServiceImpl implements UserService {
         user.getUserTerms().addAll( userTerms );
 
         return update( user );
+//        return user;
     }
 
     @Override
@@ -654,8 +655,9 @@ public class UserServiceImpl implements UserService {
                 .collect( Collectors.toCollection( TreeSet::new ) );
     }
 
+
     @Transactional
-    private User updateNoAuth( User user ) {
+    public User updateNoAuth(User user) {
         return userRepository.save( user );
     }
 
@@ -684,6 +686,13 @@ public class UserServiceImpl implements UserService {
         log.info( "Done updating user terms." );
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public long getTotalUserCount() {
+        return userRepository.countAllUsersById();
+    }
+
+
 
     @Transactional
     public void sendGeneAccessRequest(User requestingUser, UserGene userGene, String reason) {
@@ -693,5 +702,7 @@ public class UserServiceImpl implements UserService {
     private Set<String> organUberonIdsFromOrgans(Collection<OrganInfo> organs) {
         return organs != null ? (Set)organs.stream().map(Organ::getUberonId).collect(Collectors.toSet()) : null;
     }
+
+
 
 }

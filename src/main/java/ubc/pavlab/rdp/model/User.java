@@ -16,7 +16,9 @@ import javax.persistence.*;
 import javax.validation.Valid;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.sql.Timestamp;
 import java.text.MessageFormat;
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -71,6 +73,9 @@ public class User implements UserContent {
     @Column(name = "enabled", nullable = false)
     @JsonIgnore
     private Boolean enabled;
+
+    @Column(name = "registration_date", columnDefinition = "TIMESTAMP") // Ensure the column type matches SQL type
+    private Timestamp registrationDate;
 
     @ManyToMany
     @JoinTable(name = "user_role", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
@@ -183,6 +188,7 @@ public class User implements UserContent {
             return Optional.empty();
         }
     }
+
 
     @Override
     @JsonIgnore

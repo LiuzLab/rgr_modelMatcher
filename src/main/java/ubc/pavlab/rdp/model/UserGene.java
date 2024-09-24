@@ -58,7 +58,7 @@ public class UserGene extends Gene implements UserContent {
     @Column(name = "user_privacy_level")
     @ColumnDefault("NULL")
     @Enumerated(EnumType.ORDINAL)
-    @JsonIgnore
+//    @JsonIgnore
     private PrivacyLevelType privacyLevel;
 
     @ManyToOne

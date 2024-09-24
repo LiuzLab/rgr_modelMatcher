@@ -7,6 +7,7 @@ import io.micrometer.cloudwatch2.CloudWatchConfig;
 import io.micrometer.cloudwatch2.CloudWatchMeterRegistry;
 import io.micrometer.core.instrument.Clock;
 //import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
+import org.springframework.context.annotation.Profile;
 import software.amazon.awssdk.auth.credentials.EnvironmentVariableCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClient;
@@ -15,6 +16,7 @@ import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 
 
 @Configuration
+@Profile("beta")
 public class MetricsConfiguration {
 
     @Value("${cloudwatch.namespace}")

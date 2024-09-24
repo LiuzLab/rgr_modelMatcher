@@ -22,8 +22,16 @@ import ubc.pavlab.rdp.model.Profile;
 import ubc.pavlab.rdp.model.User;
 import ubc.pavlab.rdp.model.VerificationToken;
 import ubc.pavlab.rdp.services.PrivacyService;
+import ubc.pavlab.rdp.services.UserRegistrationMetricsService;
 import ubc.pavlab.rdp.services.UserService;
 import ubc.pavlab.rdp.settings.ApplicationSettings;
+import java.sql.Timestamp;
+
+import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 
 /**
  * Created by mjacobson on 16/01/18.
@@ -43,6 +51,9 @@ public class LoginController {
 
     @Autowired
     ApplicationEventPublisher eventPublisher;
+
+    @Autowired
+    private UserRegistrationMetricsService userRegistrationMetricsService;
 
     @GetMapping("/login")
     public ModelAndView login() {
@@ -82,6 +93,15 @@ public class LoginController {
         userProfile.setHideGenelist( false );
         userProfile.setContactEmailVerified( false );
 
+//        LocalDateTime utcDateTime = LocalDateTime.now(ZoneOffset.UTC); // Get the current date and time in UTC
+        OffsetDateTime utcDateTime = OffsetDateTime.now(ZoneOffset.UTC);
+        Timestamp timestamp = Timestamp.from(utcDateTime.toInstant());
+
+        user.setRegistrationDate(timestamp);
+//        Timestamp utctimestamp = Timestamp.valueOf(utcDateTime);
+//        user.setRegistrationDate(utctimestamp);
+
+
         if ( userExists != null ) {
             bindingResult.rejectValue( "email", "error.user", "There is already a user registered this email." );
             log.warn( "Trying to register an already registered email." );
@@ -94,6 +114,8 @@ public class LoginController {
             VerificationToken token = userService.createVerificationTokenForUser( user );
             eventPublisher.publishEvent( new OnRegistrationCompleteEvent( user, token ) );
             redirectAttributes.addFlashAttribute( "message", "Your user account was registered successfully. Please check your email for completing the completing the registration process." );
+
+            userRegistrationMetricsService.incrementDailyRegistrationCount(); // Update the registration metrics
             modelAndView.setViewName( "redirect:/login" );
         }
 

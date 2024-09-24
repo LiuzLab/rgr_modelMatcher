@@ -4,11 +4,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 import ubc.pavlab.rdp.exception.RemoteException;
@@ -91,7 +94,16 @@ public class RemoteResourceServiceImpl implements RemoteResourceService {
                     .organUberonIds( organUberonIds )
                     .build().toMultiValueMap() );
             addAuthParamIfAdmin( params );
-            intlUsergenes.addAll( getRemoteEntities( UserGene[].class, API_GENES_SEARCH_URI, params ) );
+
+//            intlUsergenes.addAll( getRemoteEntities( UserGene[].class, API_GENES_SEARCH_URI, params ) );
+
+            // Store the result of the API call in a variable
+            Collection<UserGene> remoteEntities = getRemoteEntities(UserGene[].class, API_GENES_SEARCH_URI, params);
+
+            log.info(MessageFormat.format("< Got This response from the API calls :: {0} >\n", remoteEntities));
+
+            // Add the result to intlUsergenes
+            intlUsergenes.addAll(remoteEntities);
         }
         // add back-reference to user
         intlUsergenes.forEach( g -> g.setUser( g.getRemoteUser() ) );
@@ -150,25 +162,79 @@ public class RemoteResourceServiceImpl implements RemoteResourceService {
         }
     }
 
-    private <T> Collection<T> getRemoteEntities( Class<T[]> arrCls, String path, MultiValueMap<String, String> params ) {
-        return Arrays.stream( applicationSettings.getIsearch().getApis() )
-                .map( api -> UriComponentsBuilder.fromUriString( api )
-                        .path( path )
-                        .queryParams( params )
-                        .build().toUri() )
-                .map( uri -> {
+//    private <T> Collection<T> getRemoteEntities( Class<T[]> arrCls, String path, MultiValueMap<String, String> params ) {
+//        return Arrays.stream( applicationSettings.getIsearch().getApis() )
+//                .map( api -> UriComponentsBuilder.fromUriString( api )
+//                        .path( path )
+//                        .queryParams( params )
+//                        .build().toUri() )
+//                .map( uri -> {
+//                    try {
+////                        return restTemplate.getForEntity( uri, arrCls );
+//                        ResponseEntity<T[]> response = restTemplate.getForEntity(uri, arrCls);
+//                        log.info("Response received from :: < " + uri + " > :: " + response.getStatusCode());
+//                        return response;
+//                    } catch ( HttpClientErrorException e ) {
+//                        log.error( MessageFormat.format( "Unsuccessful response received for {0}.", uri ), e );
+//                        return null;
+//                    }
+//                } )
+//                .filter( Objects::nonNull )
+//                .map( ResponseEntity::getBody )
+//                .flatMap( Arrays::stream )
+//                .collect( Collectors.toList() );
+//    }
+
+
+    private <T> Collection<T> getRemoteEntities(Class<T[]> arrCls, String path, MultiValueMap<String, String> params) {
+        // Set timeouts for RestTemplate to avoid long hanging requests
+        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+        requestFactory.setConnectTimeout(5000); // 5 seconds timeout for connection
+        requestFactory.setReadTimeout(5000);    // 5 seconds timeout for reading the response
+
+        RestTemplate restTemplate = new RestTemplate(requestFactory);
+
+        // Collect results from all APIs, skipping failed ones
+        return Arrays.stream(applicationSettings.getIsearch().getApis())
+                .map(api -> {
+                    // Build URI for each API
+                    URI uri = UriComponentsBuilder.fromUriString(api)
+                            .path(path)
+                            .queryParams(params)
+                            .build().toUri();
+
                     try {
-                        return restTemplate.getForEntity( uri, arrCls );
-                    } catch ( HttpClientErrorException e ) {
-                        log.error( MessageFormat.format( "Unsuccessful response received for {0}.", uri ), e );
-                        return null;
+                        // Attempt to fetch the response from the API
+                        log.info("Calling this endpoint network " + uri + ": ");
+                        ResponseEntity<T[]> response = restTemplate.getForEntity(uri, arrCls);
+                        log.info("Response received from " + uri + ": " + response.getStatusCode());
+                        if (response.getBody() == null || response.getBody().length == 0) {
+                            log.warn("Empty response body from " + uri);
+                            return null; // If the body is empty, skip this response
+                        }
+                        return response.getBody(); // Return the valid response body
+
+                    } catch (HttpClientErrorException e) {
+                        // Handle specific HTTP client errors (e.g., 404, 503)
+                        log.error("HTTP error from " + uri + ": " + e.getStatusCode());
+                        return null; // Skip the failed API call
+
+                    } catch (ResourceAccessException e) {
+                        // Handle timeouts or connection issues
+                        log.error("Timeout or connection error from " + uri, e);
+                        return null; // Skip this API if there's a connection issue
+
+                    } catch (Exception e) {
+                        // Catch any other unexpected exceptions
+                        log.error("Unexpected error from " + uri, e);
+                        return null; // Skip the API if any unknown error occurs
                     }
-                } )
-                .filter( Objects::nonNull )
-                .map( ResponseEntity::getBody )
-                .flatMap( Arrays::stream )
-                .collect( Collectors.toList() );
+                })
+                .filter(Objects::nonNull) // Filter out null responses
+                .flatMap(Arrays::stream)  // Flatten the arrays into a single stream
+                .collect(Collectors.toList()); // Collect all valid results into a list
     }
+
 
     private URI getApiUri( URI remoteHost ) throws RemoteException {
         String remoteHostAuthority = remoteHost.getAuthority();

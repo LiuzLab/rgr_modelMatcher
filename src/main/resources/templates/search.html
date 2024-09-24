@@ -13,7 +13,7 @@
 <div th:replace="layouts/common::header">...</div>
 
 <div class="container py-4">
-    <div th:replace="layouts/common::title(title='Search : BETA', subtitle='Genes, Models &amp; Organs Systems')">
+    <div th:replace="layouts/common::title(title='Search', subtitle='Genes, Models &amp; Organs Systems')">
         ...
     </div>
 
@@ -287,7 +287,8 @@
 
     <!--International results-->
 <!--    <div th:if="${@applicationSettings.getIsearch().isEnabled()  and ${(itlUsers != null) or (itlUsergenes != null)}"-->
-    <div th:if="${@applicationSettings.getIsearch().isEnabled()}"
+<!--    <div th:if="${@applicationSettings.getIsearch().isEnabled()}"-->
+    <div
          id="itlResults"
          class="mb-3">
         <hr/>
