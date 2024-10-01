@@ -200,6 +200,55 @@ public class MatchDashboardController {
     }
 
 
+    @PutMapping("/scientistRegistry/updateProfileByStage")
+    public ResponseEntity<?> updateUserProfileInStages(@RequestBody String email,
+                                               @RequestBody String stage,
+                                               @RequestBody UserProfileUpdateRequest updateRequest) {
+
+
+        try{
+
+        User user = userService.findUserByEmailNoAuth(email);
+
+        log.info(String.format("MatchDashboardController :: updateUserProfileInStages for user email: %s : stage: %s : Request: %s",
+                email, stage ,updateRequest));
+
+
+
+            if (user == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found.");
+            }
+
+            // Based on the stage, update the respective part of the profile and return the updated user
+            switch (stage) {
+                case "basicAndContactInfo":
+                    user = matchDashboardService.updateUserBasicProfile(user, updateRequest.getProfile());
+                    break;
+                case "publications":
+                    user = matchDashboardService.updateUserPublications(user, updateRequest.getPublications());
+                    break;
+                case "ModelAndOrganSystem":
+                    user = matchDashboardService.updateUserOrgansAndResearcherCategories(user, updateRequest.getOrganUberonIds(), updateRequest.getProfile());
+                    break;
+                case "ModelOrganismAndGenes":
+                    user = matchDashboardService.updateUserGenesAndTaxonDescriptions(user, updateRequest.getTaxonGenesPayload());
+                    break;
+                default:
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid update stage.");
+            }
+
+            // Save the updated user
+            user = matchDashboardService.save(user);
+
+            return ResponseEntity.ok("User profile updated successfully.");
+
+        } catch (Exception e) {
+            log.error("Error retrieving user profile", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+
+
 
     @GetMapping(value = "/scientistRegistry/test")
     public String getTest() {
