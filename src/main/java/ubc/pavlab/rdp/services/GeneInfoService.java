@@ -24,6 +24,8 @@ import ubc.pavlab.rdp.model.Taxon;
 import ubc.pavlab.rdp.util.SearchResult;
 
 import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by mjacobson on 17/01/18.
@@ -31,6 +33,8 @@ import java.util.Collection;
 public interface GeneInfoService {
 
     GeneInfo load( Integer geneId );
+
+    Map<Integer, GeneInfo> loadByIds(Set<Integer> geneIds);
 
     Collection<GeneInfo> load( Collection<Integer> ids );
 

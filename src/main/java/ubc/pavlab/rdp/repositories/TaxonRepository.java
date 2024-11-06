@@ -7,10 +7,14 @@ import ubc.pavlab.rdp.model.Taxon;
 
 import javax.persistence.QueryHint;
 import java.util.List;
+import java.util.Set;
 
 @Repository
 public interface TaxonRepository extends JpaRepository<Taxon, Integer> {
 
     @QueryHints(@QueryHint(name = "org.hibernate.cacheable", value = "true"))
     List<Taxon> findByActiveTrueOrderByOrdering();
+
+    // New method to fetch a list of Taxon by their IDs
+    List<Taxon> findByIdIn(Set<Integer> ids);
 }

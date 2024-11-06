@@ -41,6 +41,51 @@ public class MatchDashboardController {
         this.userService = userService;
     }
 
+
+
+
+    @PostMapping(
+            value = "/scientistRegistry/create/users",
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public ResponseEntity<?> createNewUserScientistUsers(
+            @RequestBody UserUpdatedProfileModel userUpdatedProfileModel,
+            HttpServletRequest request) {
+
+
+        try {
+            User createdUser = matchDashboardService.createNewUserWithUserInfo(
+                    userUpdatedProfileModel.getEmail(),
+                    userUpdatedProfileModel.getProfile(),
+                    userUpdatedProfileModel.getProfile().getPublications(),
+                    userUpdatedProfileModel.getOrganUberonIds(),
+                    userUpdatedProfileModel.getTaxonGenesPayload());
+
+
+
+
+
+            if (createdUser == null) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body("User with this email already exists.");
+            }
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "User Profile  created successfully.");
+            response.put("createdUserProfile", createdUser);
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+
+//            return ResponseEntity.status(HttpStatus.CREATED).body("User created successfully.");
+        } catch (IllegalArgumentException e) {
+            // Catch validation errors and return 400 Bad Request
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (Exception e) {
+            log.error("Error creating new user", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while creating the user.");
+        }
+    }
+
+
     // For New ModelMatcher Project.
     @GetMapping("/scientistRegistry/user/profile")
     public ResponseEntity<Map<String, Object>> getUserProfileByEmail(@RequestParam("email") String email) {

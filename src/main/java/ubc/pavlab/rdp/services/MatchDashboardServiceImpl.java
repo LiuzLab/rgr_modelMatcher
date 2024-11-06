@@ -4,6 +4,7 @@ import lombok.extern.apachecommons.CommonsLog;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,10 +22,13 @@ import ubc.pavlab.rdp.model.enums.TierType;
 import ubc.pavlab.rdp.repositories.UserRepository;
 import ubc.pavlab.rdp.settings.ApplicationSettings;
 
+import javax.persistence.PersistenceContext;
+import javax.persistence.EntityManager;
 import java.sql.Timestamp;
 import java.text.MessageFormat;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -65,12 +69,14 @@ public class MatchDashboardServiceImpl  implements MatchDashboardService {
     @Autowired
     PrivacyService privacyService;
 
+    @PersistenceContext
+    private EntityManager entityManager;
+
+
 
     @Transactional
-    @PostMapping("/registration")
-    public User createNewUser(User user,
-                                      BindingResult bindingResult,
-                                      RedirectAttributes redirectAttributes ) {
+    @Override
+    public User createNewUser(User user) {
 
         User userExists = userService.findUserByEmailNoAuth( user.getEmail() );
 
@@ -85,7 +91,6 @@ public class MatchDashboardServiceImpl  implements MatchDashboardService {
 
         OffsetDateTime utcDateTime = OffsetDateTime.now(ZoneOffset.UTC);
         Timestamp timestamp = Timestamp.from(utcDateTime.toInstant());
-
         user.setRegistrationDate(timestamp);
 
 
@@ -93,19 +98,253 @@ public class MatchDashboardServiceImpl  implements MatchDashboardService {
             log.warn( "Trying to register an already registered email." );
         }
 
-        if ( bindingResult.hasErrors() ) {
-
-        } else {
-            user = userService.create( user );
-            VerificationToken token = userService.createVerificationTokenForUser( user );
-            eventPublisher.publishEvent( new OnRegistrationCompleteEvent( user, token ) );
-//            redirectAttributes.addFlashAttribute( "message", "Your user account was registered successfully. Please check your email for completing the completing the registration process." );
-
-            userRegistrationMetricsService.incrementDailyRegistrationCount(); // Update the registration metrics
-
-        }
+//        if ( bindingResult.hasErrors() ) {
+//
+//        } else {
+//            user = userService.create( user );
+//            VerificationToken token = userService.createVerificationTokenForUser( user );
+//            eventPublisher.publishEvent( new OnRegistrationCompleteEvent( user, token ) );
+//
+//            userRegistrationMetricsService.incrementDailyRegistrationCount(); // Update the registration metrics
+//        }
 
         return user;
+    }
+
+
+
+    @Transactional
+    @Override
+    public User createNewUserWithUserInfo(String email,
+                                          Profile profile,
+                                          Set<Publication> publications,
+                                          Set<String> organUberonIds,
+                                          Map<String, TaxonGenesPayload> taxonGenesPayload) {
+
+        // Check if user already exists
+        // Validate email
+        if (email == null || email.trim().isEmpty() || !isValidEmail(email)) {
+            throw new IllegalArgumentException("Invalid email provided.");
+        }
+
+        // Check if user already exists
+        User userExists = userService.findUserByEmailNoAuth(email);
+        if (userExists != null) {
+            log.warn("User with email " + email + " already exists.");
+            return null; // or throw new UserAlreadyExistsException(email);
+        }
+
+
+        // Create and initialize the user object
+        User newUser = initializeNewUser(email, profile);
+
+        // Add publications if provided
+//        addPublicationsToUser(newUser, publications);
+
+        updateUserPublications(newUser, publications);
+
+        // Add organs if provided
+//        addOrgansToUser(newUser, organUberonIds);
+
+        updateUserOrgansAndResearcherCategories(newUser, organUberonIds, newUser.getProfile());
+
+
+        // Add genes and taxon descriptions if provided
+//        addGenesAndTaxonDescriptionsToUser(newUser, taxonGenesPayload);
+
+
+
+        buildUserGenesFromTaxonPayload(newUser, taxonGenesPayload);
+
+
+
+
+        // Save and return the newly created user
+
+
+        log.info( MessageFormat.format( " creating this new scientist user profile for email {0}  :: Saving User :: {1}.", email, newUser ) );
+        log.info( MessageFormat.format( " PROFILE : {0} .", newUser.getProfile() ) );
+        log.info( MessageFormat.format( " getPublications : {0} .", newUser.getProfile().getPublications() ) );
+        log.info( MessageFormat.format( " getResearcherCategories : {0} .", newUser.getProfile().getResearcherCategories() ) );
+        log.info( MessageFormat.format( " getUserGenes : {0} .", newUser.getUserGenes() ) );
+//        return newUser;
+
+        return userService.create(newUser);
+
+
+    }
+
+
+    @Transactional
+    @Override
+    public User createNewUserWithUserInfoTest(String email,
+                                          Profile profile,
+                                          Set<Publication> publications,
+                                          Set<String> organUberonIds,
+                                          Map<String, TaxonGenesPayload> taxonGenesPayload) {
+
+        // Check if user already exists
+        // Validate email
+        if (email == null || email.trim().isEmpty() || !isValidEmail(email)) {
+            throw new IllegalArgumentException("Invalid email provided.");
+        }
+
+        // Check if user already exists
+        User userExists = userService.findUserByEmailNoAuth(email);
+        if (userExists != null) {
+            log.warn("User with email " + email + " already exists.");
+            return null; // or throw new UserAlreadyExistsException(email);
+        }
+
+
+        // Create and initialize the user object
+        User newUser = initializeNewUser(email, profile);
+
+        // Add publications if provided
+        addPublicationsToUser(newUser, publications);
+
+        // Add organs if provided
+        addOrgansToUser(newUser, organUberonIds);
+
+        // Add genes and taxon descriptions if provided
+        addGenesAndTaxonDescriptionsToUser(newUser, taxonGenesPayload);
+
+
+        User user = new User();
+        user = updateUserBasicProfile(user, profile);
+        user = updateUserPublications(user, publications);
+        user = updateUserOrgansAndResearcherCategories(user, organUberonIds, profile);
+        user = updateUserGenesAndTaxonDescriptions(user, taxonGenesPayload);
+
+
+
+
+        // Save and return the newly created user
+
+
+        log.info( MessageFormat.format( " creating this new scientist user profile for email {0}  :: Saving User :: {1}.", email, newUser ) );
+        log.info( MessageFormat.format( " PROFILE : {0} .", newUser.getProfile() ) );
+        log.info( MessageFormat.format( " getPublications : {0} .", newUser.getProfile().getPublications() ) );
+        log.info( MessageFormat.format( " getResearcherCategories : {0} .", newUser.getProfile().getResearcherCategories() ) );
+        log.info( MessageFormat.format( " getUserGenes : {0} .", newUser.getUserGenes() ) );
+        return newUser;
+
+//        return userService.create(newUser);
+
+
+    }
+
+
+
+    private boolean isValidEmail(String email) {
+        String emailRegex = "^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$"; // Basic email format validation regex
+        return email.matches(emailRegex);
+    }
+
+    private User initializeNewUser(String email, Profile profile) {
+        User newUser = new User();
+        newUser.setEmail(email);
+        newUser.setEnabled(false); // User starts as disabled by default
+
+        // Initialize and set the profile with default values
+        Profile userProfile = profile;
+        userProfile.setPrivacyLevel(privacyService.getDefaultPrivacyLevel());
+        userProfile.setShared(applicationSettings.getPrivacy().isDefaultSharing());
+        userProfile.setHideGenelist(false); // Default value
+        userProfile.setContactEmailVerified(false); // Default value
+
+        newUser.setProfile(userProfile);
+
+        newUser.setPassword("CheckModelMatcherDBForUser");
+
+        // Set registration date to current UTC time
+        OffsetDateTime utcDateTime = OffsetDateTime.now(ZoneOffset.UTC);
+        Timestamp timestamp = Timestamp.from(utcDateTime.toInstant());
+        newUser.setRegistrationDate(timestamp);
+
+        return newUser;
+    }
+
+    private void addPublicationsToUser(User user, Set<Publication> publications) {
+        if (publications != null && !publications.isEmpty()) {
+            user.getProfile().getPublications().addAll(publications);
+        }
+    }
+
+    private void addOrgansToUser(User user, Set<String> organUberonIds) {
+        if (organUberonIds != null && !organUberonIds.isEmpty()) {
+            Set<UserOrgan> userOrgans = organUberonIds.stream()
+                    .map(uberonId -> {
+                        UserOrgan organ = new UserOrgan();
+                        organ.setUberonId(uberonId);
+                        organ.setUser(user);
+                        return organ;
+                    })
+                    .collect(Collectors.toSet());
+
+            user.getUserOrgans().putAll(
+                    userOrgans.stream().collect(Collectors.toMap(UserOrgan::getUberonId, organ -> organ))
+            );
+        }
+    }
+
+    private void addGenesAndTaxonDescriptionsToUser(User user, Map<String, TaxonGenesPayload> taxonGenesPayload) {
+        if (taxonGenesPayload == null || taxonGenesPayload.isEmpty()) {
+            return;
+        }
+
+        // Batch-fetch taxons by IDs to reduce individual DB calls
+        Set<Integer> taxonIds = taxonGenesPayload.keySet().stream().map(Integer::valueOf).collect(Collectors.toSet());
+        Map<Integer, Taxon> taxonMap = taxonService.findByIds(taxonIds);
+
+        taxonGenesPayload.forEach((taxonIdStr, taxonPayload) -> {
+            Integer taxonId = Integer.valueOf(taxonIdStr);
+            Taxon taxon = taxonMap.get(taxonId);
+
+            if (taxon == null) {
+                log.warn("Taxon not found for id: " + taxonId);
+                return;
+            }
+
+            // Handle taxon description
+            String taxonDescription = taxonPayload.getTaxonDescription();
+            if (taxonDescription != null && !taxonDescription.trim().isEmpty()) {
+                user.getTaxonDescriptions().put(taxon, taxonDescription);
+            } else {
+                user.getTaxonDescriptions().remove(taxon);
+            }
+
+            // Batch-fetch gene info by IDs
+            Set<Integer> geneIds = taxonPayload.getGenesToTierMap().keySet().stream().map(Integer::valueOf).collect(Collectors.toSet());
+            Map<Integer, GeneInfo> geneInfoMap = geneService.loadByIds(geneIds);
+
+            // Update user genes based on tier and privacy level
+            Map<Integer, UserGene> userGenes = updateTermsAndGenesInTaxon(user, taxon, geneInfoMap, taxonPayload);
+
+            // Remove existing genes for this taxon and add updated ones
+            user.getUserGenes().entrySet().removeIf(e -> e.getValue().getTaxon().equals(taxon));
+            user.getUserGenes().putAll(userGenes);
+        });
+    }
+
+    private Map<Integer, UserGene> updateTermsAndGenesInTaxon(User user, Taxon taxon, Map<Integer, GeneInfo> geneInfoMap, TaxonGenesPayload taxonPayload) {
+        Map<Integer, UserGene> map = new HashMap<>();
+        for (Map.Entry<Integer, GeneInfo> integerGeneInfoEntry : geneInfoMap.entrySet()) {
+            Integer geneId = integerGeneInfoEntry.getKey();
+            GeneInfo geneInfo = integerGeneInfoEntry.getValue();
+
+            UserGene userGene = user.getUserGenes().getOrDefault(geneId, new UserGene());
+            userGene.setUser(user);
+            userGene.setTaxon(taxon);
+            userGene.setTier(taxonPayload.getGenesToTierMap().get(Integer.valueOf(geneId)));
+            userGene.setPrivacyLevel(taxonPayload.getGenesToPrivacyLevelMap().getOrDefault(geneId, null));
+
+            UserGene apply = userGene;
+            if (map.put(apply.getGeneId(), apply) != null) {
+                throw new IllegalStateException("Duplicate key");
+            }
+        }
+        return map;
     }
 
 
@@ -234,16 +473,34 @@ public class MatchDashboardServiceImpl  implements MatchDashboardService {
             user.getProfile().setHideGenelist( profile.getHideGenelist() );
         }
 
-        if ( publications != null ) {
-            user.getProfile().getPublications().retainAll( publications );
-            user.getProfile().getPublications().addAll( publications );
+//        if ( publications != null ) {
+//            user.getProfile().getPublications().retainAll( publications );
+//            user.getProfile().getPublications().addAll( publications );
+//        }
+
+        if (publications != null) {
+            Set<Publication> attachedPublications = publications.stream()
+                    .map(publication -> publication.getId() == null ? publication : entityManager.merge(publication))
+                    .collect(Collectors.toSet());
+
+            user.getProfile().getPublications().retainAll(attachedPublications);
+            user.getProfile().getPublications().addAll(attachedPublications);
         }
 
         if ( applicationSettings.getOrgans().getEnabled() ) {
             User finalUser = user;
             Map<String, UserOrgan> userOrgans = organInfoService.findByUberonIdIn( organUberonIds ).stream()
-                    .map( organInfo -> finalUser.getUserOrgans().getOrDefault( organInfo.getUberonId(), UserOrgan.createFromOrganInfo(finalUser, organInfo ) ) )
+                    .map( organInfo -> {
+
+                        log.info(MessageFormat.format( "Returning this Organ :: {0} .",
+                                finalUser.getUserOrgans().getOrDefault( organInfo.getUberonId(), UserOrgan.createFromOrganInfo(finalUser, organInfo ))));
+
+                        return finalUser.getUserOrgans().getOrDefault( organInfo.getUberonId(), UserOrgan.createFromOrganInfo(finalUser, organInfo ) );
+                    } )
                     .collect( Collectors.toMap( Organ::getUberonId, identity() ) );
+
+            log.info(MessageFormat.format( "userOrgans :: {0} .", userOrgans));
+
             user.getUserOrgans().clear();
             user.getUserOrgans().putAll( userOrgans );
         }
@@ -374,9 +631,17 @@ public class MatchDashboardServiceImpl  implements MatchDashboardService {
     @Transactional
     @Override
     public User updateUserPublications(User user, Set<Publication> publications) {
+//        if (publications != null) {
+//            user.getProfile().getPublications().retainAll(publications);
+//            user.getProfile().getPublications().addAll(publications);
+//        }
         if (publications != null) {
-            user.getProfile().getPublications().retainAll(publications);
-            user.getProfile().getPublications().addAll(publications);
+            Set<Publication> attachedPublications = publications.stream()
+                    .map(publication -> publication.getId() == null ? publication : entityManager.merge(publication))
+                    .collect(Collectors.toSet());
+
+            user.getProfile().getPublications().retainAll(attachedPublications);
+            user.getProfile().getPublications().addAll(attachedPublications);
         }
         return user;  // Return the updated user object
     }

@@ -56,6 +56,15 @@ public class GeneInfoServiceImpl implements GeneInfoService {
     }
 
     @Override
+    public Map<Integer, GeneInfo> loadByIds(Set<Integer> geneIds) {
+        List<GeneInfo> genes = geneInfoRepository.findByIdIn(geneIds);
+
+        // Convert the List to a Map with geneId as the key
+        return genes.stream()
+                .collect(Collectors.toMap(GeneInfo::getGeneId, gene -> gene));
+    }
+
+    @Override
     public GeneInfo findBySymbolAndTaxon( String symbol, Taxon taxon ) {
         if (taxon.getId() ==99999){
             taxon.setId(9606);

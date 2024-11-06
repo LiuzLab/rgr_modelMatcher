@@ -8,6 +8,8 @@ import ubc.pavlab.rdp.model.GeneInfo;
 import ubc.pavlab.rdp.model.Taxon;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.Set;
 
 @Repository
 public interface GeneInfoRepository extends JpaRepository<GeneInfo, Integer> {
@@ -16,6 +18,8 @@ public interface GeneInfoRepository extends JpaRepository<GeneInfo, Integer> {
 
     @Query("select gene from GeneInfo gene left join fetch gene.orthologs where gene.geneId = :geneId")
     GeneInfo findByGeneIdWithOrthologs( @Param("geneId") Integer geneId );
+
+    List<GeneInfo> findByIdIn(Set<Integer> ids);
 
     Collection<GeneInfo> findAllByGeneIdIn( Collection<Integer> geneIds );
 

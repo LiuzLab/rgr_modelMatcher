@@ -6,6 +6,10 @@ import ubc.pavlab.rdp.model.Taxon;
 import ubc.pavlab.rdp.repositories.TaxonRepository;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Created by mjacobson on 17/01/18.
@@ -19,6 +23,15 @@ public class TaxonServiceImpl implements TaxonService {
     @Override
     public Taxon findById( Integer id ) {
         return taxonRepository.findOne( id );
+    }
+
+    @Override
+    public Map<Integer, Taxon> findByIds(Set<Integer> ids) {
+        List<Taxon> taxons = taxonRepository.findByIdIn(ids);
+
+        // Convert the list of Taxon objects to a map with the ID as the key
+        return taxons.stream()
+                .collect(Collectors.toMap(Taxon::getId, taxon -> taxon));
     }
 
     @Override

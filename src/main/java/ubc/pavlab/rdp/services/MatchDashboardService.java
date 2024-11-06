@@ -10,6 +10,19 @@ import java.util.Set;
 
 public interface MatchDashboardService {
 
+    User createNewUser(User user);
+
+    User createNewUserWithUserInfo(String email,
+                                   Profile profile,
+                                   Set<Publication> publications,
+                                   Set<String> organUberonIds,
+                                   Map<String, TaxonGenesPayload> taxonGenesPayload);
+
+    User createNewUserWithUserInfoTest(String email,
+                                       Profile profile,
+                                       Set<Publication> publications,
+                                       Set<String> organUberonIds,
+                                       Map<String, TaxonGenesPayload> taxonGenesPayload);
 
     User update( User user );
 

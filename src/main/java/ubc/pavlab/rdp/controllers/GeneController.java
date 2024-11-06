@@ -59,14 +59,12 @@ public class GeneController {
     @ResponseBody
     @GetMapping(value = "/taxon/{taxonId}/gene/search/{query}")
     public Collection<SearchResult<GeneInfo>> searchGenesByTaxonAndQuery( @PathVariable Integer taxonId, @PathVariable String query,
-                                                                          @RequestParam(value = "max", required = false, defaultValue = "-1") int max ) {
-        Taxon taxon = taxonService.findById( taxonId );
+                                                                          @RequestParam(value = "max", required = false, defaultValue = "-1") int max ) {Taxon taxon = taxonService.findById( taxonId );
 //        return geneService.autocomplete( query, taxon, max ); // UnComment when later and remote the botton lines
 
         Collection<SearchResult<GeneInfo>> test = geneService.autocomplete(query, taxon, max);
 //        log.info( MessageFormat.format( "< AUTOCOMPLETE RESPONSE (searchGenesBy Taxon And Query)  For  \ntaxonId : {0} : \nquery : {1} \n RESPONSE :: {2} >\n", taxonId, query, test ));
         return test;
-
 
     }
 
