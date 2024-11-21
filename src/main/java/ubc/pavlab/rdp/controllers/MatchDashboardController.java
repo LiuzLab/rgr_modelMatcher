@@ -117,11 +117,62 @@ public class MatchDashboardController {
 
     }
 
+    @GetMapping("/scientistRegistry/user/getProfileJsonByUserID")
+    public ResponseEntity<String> getUserProfileByUserIDJsonSerialized(@RequestParam("userId") Integer userId) {
+        try {
+
+
+            if (userId == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            }
+
+        // TODO: Later Move to service MD_service.
+          User user = userService.findUserById(userId);
+
+            if (user == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            }
+
+            Map<Integer, String> userTaxonDescription = new HashMap<>();
+            for (Map.Entry<Taxon, String> entry : user.getTaxonDescriptions().entrySet()) {
+                Taxon taxon = entry.getKey();
+                String description = entry.getValue();
+                userTaxonDescription.put(taxon.getId(), description);
+            }
+
+            // Prepare the response map
+            Map<String, Object> response = new HashMap<>();
+            response.put("user", user);
+            response.put("userTaxonDescription", userTaxonDescription);
+
+            // Log user info (excluding sensitive data like email)
+            log.info(String.format("MatchDashboardController :: getUserProfileByUserID for user email: %s : response: %s", userId, user.getId()));
+
+            // Create a custom ObjectMapper to serialize all fields
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.setSerializationInclusion(JsonInclude.Include.ALWAYS);  // Ensure all fields, including null, are serialized
+            mapper.configure(MapperFeature.DEFAULT_VIEW_INCLUSION, true);  // Include all fields even without views
+
+            // Serialize the response to JSON
+            String jsonResponse = mapper.writeValueAsString(response);
+
+            // Return the serialized response
+            return ResponseEntity.ok(jsonResponse);
+        } catch (JsonProcessingException e) {
+            log.error("Error serializing the response", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        } catch (Exception e) {
+            log.error("Error retrieving user profile", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+
+
     @GetMapping("/scientistRegistry/user/profileJson")
     public ResponseEntity<String> getUserProfileByEmailJsonSerialized(@RequestParam("email") String email) {
         try {
             // TODO: Later Move to service MD_service.
-          User user = userService.findUserByEmailNoAuth(email);
+            User user = userService.findUserByEmailNoAuth(email);
 
             if (user == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
