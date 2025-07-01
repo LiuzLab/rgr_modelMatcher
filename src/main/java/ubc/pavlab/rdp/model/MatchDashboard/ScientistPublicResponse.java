@@ -20,6 +20,8 @@ public class ScientistPublicResponse {
     private String MatchingGeneSymbol;
     private String MatchingGeneName;
     private String MatchingGeneAliases;
+    private String lastName;
+    private String organization;
     private TierType tier;
     private ResearcherPosition PI;
     private String network;

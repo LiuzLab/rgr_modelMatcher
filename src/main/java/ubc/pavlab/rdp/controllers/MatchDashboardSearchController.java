@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import ubc.pavlab.rdp.model.*;
+import ubc.pavlab.rdp.model.MatchDashboard.MatchByGeneResponse;
 import ubc.pavlab.rdp.model.MatchDashboard.ScientistPublicResponse;
 import ubc.pavlab.rdp.model.enums.ResearcherCategory;
 import ubc.pavlab.rdp.model.enums.ResearcherPosition;
@@ -45,6 +46,9 @@ public class MatchDashboardSearchController {
 
     @Value("${modelMatcher.url}")
     private String HOSTING_BASE_URL;
+
+    private final String ANONOYMOUS = "Anonymous Scientist";
+    private final String LINK_TO_RESTRICTED_GENE_INFO = "https://www.modelmatcher.net/Tutorials.html#collapse24_41";
 
     @GetMapping(value = "/SearchScientistByGene", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, Object>> searchScientistUsersByGene(
@@ -100,6 +104,71 @@ public class MatchDashboardSearchController {
         }
     }
 
+
+    /**
+     * A single JSON endpoint that returns:
+     *  • gene metadata
+     *  • ortholog mappings
+     *  • local & partner registry scientists (with tiers, model organisms, etc.)
+     *  • optional userEmail for audit/tracking
+     */
+    @GetMapping(path = "/scientistUserSearchByWebApp", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<MatchByGeneResponse> searchByGeneJson(
+            @RequestParam String symbol,
+            @RequestParam(required = false, defaultValue = "9606") Integer taxonId,
+            @RequestParam(required = false, defaultValue = "false") Boolean iSearch,
+            @RequestParam(required = false) String userEmail
+    ) {
+        // 1) validate & load gene
+        Taxon taxon = taxonService.findById(taxonId);
+        if (taxon == null) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(MatchByGeneResponse.error("Invalid taxonId"));
+        }
+        GeneInfo gene = geneService.findBySymbolAndTaxon(symbol, taxon);
+        if (gene == null) {
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body(MatchByGeneResponse.error("Gene not found: " + symbol));
+        }
+
+        // 2) build ortholog map: taxon → [symbols]
+        Map<String,List<String>> orthologs = gene.getOrthologs().stream()
+                .collect(Collectors.groupingBy(
+                        gi -> gi.getTaxon().getScientificName(),
+                        Collectors.mapping(GeneInfo::getSymbol, Collectors.toList())
+                ));
+
+        // 3) local matches
+        Set<TierType> tiers = TierType.ANY;
+        Collection<UserGene> localMatches = userGeneService
+                .handleGeneSearch(gene, tiers, null, null, null, organsFromUberonIds(null));
+
+        // 4) partner registry matches
+        Collection<UserGene> partnerMatches = Collections.emptyList();
+        if (Boolean.TRUE.equals(iSearch)) {
+            partnerMatches = remoteResourceService
+                    .findGenesBySymbol(symbol, taxon, tiers, null, null, null, null);
+        }
+
+        // 5) convert both sets to your DTO
+        List<ScientistPublicResponse> local = mapResponseToScientistPublicResponse(localMatches);
+        List<ScientistPublicResponse> partner = mapResponseToScientistPublicResponse(partnerMatches);
+
+        // 6) package into the response DTO
+        MatchByGeneResponse resp = new MatchByGeneResponse();
+        resp.setSymbol(gene.getSymbol());
+        resp.setGeneId(gene.getGeneId());
+        resp.setOrthologs(orthologs);
+        resp.setLocalScientists(local);
+        resp.setPartnerScientists(partner);
+        resp.setUserEmail(userEmail);
+
+        return ResponseEntity.ok(resp);
+    }
+
+
     private List<ScientistPublicResponse> mapResponseToScientistPublicResponse(Collection<UserGene> userGenes) {
         return userGenes.stream().map(userGene -> {
             ScientistPublicResponse response = new ScientistPublicResponse();
@@ -110,6 +179,16 @@ public class MatchDashboardSearchController {
             response.setMatchingGeneName(userGene.getName());
             response.setMatchingGeneAliases(userGene.getAliases());
             response.setTier(userGene.getTier());
+
+            String lastName = (userGene.getUser().getProfile().getLastName() != null && userGene.getUser().getId() != 0)
+                    ? userGene.getUser().getProfile().getLastName()
+                    : ANONOYMOUS;
+            response.setLastName(lastName);
+
+            String organization = (userGene.getUser().getProfile().getOrganization() != null && userGene.getUser().getId() != 0)
+                    ? userGene.getUser().getProfile().getOrganization()
+                    : null;
+            response.setOrganization(organization);
 
             ResearcherPosition pi = (userGene.getRemoteUser() != null && userGene.getRemoteUser().getProfile() != null)
                     ? userGene.getRemoteUser().getProfile().getResearcherPosition()
@@ -125,7 +204,7 @@ public class MatchDashboardSearchController {
 
             String profileLink = (userGene.getRemoteUser() != null)
                     ? userGene.getRemoteUser().getOriginUrl() + "/userView/" + userGene.getRemoteUser().getId()
-                    : HOSTING_BASE_URL + "/userView/" + userGene.getUser().getId();
+                    : ( userGene.getUser().getId() != 0 ? HOSTING_BASE_URL + "/userView/" + userGene.getUser().getId() : LINK_TO_RESTRICTED_GENE_INFO);
             response.setProfileLink(profileLink);
 
             return response;
@@ -135,4 +214,7 @@ public class MatchDashboardSearchController {
     private Collection<OrganInfo> organsFromUberonIds(Set<String> organUberonIds) {
         return organUberonIds == null ? null : organInfoService.findByUberonIdIn(organUberonIds);
     }
+
+
+
 }
