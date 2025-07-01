@@ -148,6 +148,7 @@
     <script sec:authorize="isAuthenticated()" th:src="@{/js/activity-monitor.js}"></script>
     <th:block th:unless="${#strings.isEmpty(@siteSettings.gaTracker)}">
         <!-- Global site tag (gtag.js) - Google Analytics -->
+        console.log('✅ GA snippet loaded and inline script running');
         <script th:src="@{https://www.googletagmanager.com/gtag/js(id=${@siteSettings.gaTracker})}"></script>
         <script th:inline="javascript">
             window.dataLayer = window.dataLayer || [];
@@ -158,6 +159,38 @@
 
             gtag('js', new Date());
             gtag('config', [[${@siteSettings.gaTracker}]]);
+            gtag('set','debug_mode',true);
+
+            // 2) bind handlers right away (no DOMContentLoaded wrapper)
+            (function(){
+                // --- SEARCH FORMS ---
+                var searches = document.querySelectorAll('form.search');
+                console.log('GA4 binding: found', searches.length, 'search forms');
+                searches.forEach(function(f){
+                    f.addEventListener('submit', function(){
+                        var fld = f.querySelector('input[name="symbol"], input[name="descriptionLike"]');
+                        var term = fld ? fld.value : '';
+                        console.log('GA4 → search:', term);
+                        gtag('event','search',{
+                            search_term: term,
+                            user_type: '[[${userType}]]',
+                            transport_type: 'beacon'    // uses Beacon API so hit survives page unload :contentReference[oaicite:0]{index=0}
+                        });
+                    });
+                });
+
+                // --- LOGIN FORMS ---
+                var logins = document.querySelectorAll('form[action*="/login"]');
+                console.log('GA4 binding: found', logins.length, 'login forms');
+                logins.forEach(function(f){
+                    f.addEventListener('submit', function(){
+                        console.log('GA4 → login');
+                        gtag('event','login',{
+                            user_type: '[[${userType}]]'
+                        });
+                    });
+                });
+            })();
         </script>
     </th:block>
 </th:block>
